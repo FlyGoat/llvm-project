@@ -174,6 +174,9 @@ class LoongArchAsmParser : public MCTargetAsmParser {
   // Helper to emit pseudo instruction "call36 sym" or "tail36 $rj, sym".
   void emitFuncCall36(MCInst &Inst, SMLoc IDLoc, MCStreamer &Out,
                       bool IsTailCall);
+  // Helper to emit pseudo instruction "call32 sym" or "tail32 $rj, sym".
+  void emitFuncCall32(MCInst &Inst, SMLoc IDLoc, MCStreamer &Out,
+                      bool IsTailCall);
 
 public:
   enum LoongArchMatchResultTy {
@@ -505,6 +508,25 @@ public:
                        VK == LoongArchMCExpr::VK_LoongArch_TLS_LD_PCREL20_S2 ||
                        VK == LoongArchMCExpr::VK_LoongArch_TLS_GD_PCREL20_S2 ||
                        VK == LoongArchMCExpr::VK_LoongArch_TLS_DESC_PCREL20_S2;
+    return IsConstantImm
+               ? isInt<20>(Imm) && IsValidKind
+               : LoongArchAsmParser::classifySymbolRef(getImm(), VK) &&
+                     IsValidKind;
+  }
+
+  bool isSImm20pcaddu12i() const {
+    if (!isImm())
+      return false;
+
+    int64_t Imm;
+    LoongArchMCExpr::VariantKind VK = LoongArchMCExpr::VK_LoongArch_None;
+    bool IsConstantImm = evaluateConstantImm(getImm(), Imm, VK);
+    bool IsValidKind = VK == LoongArchMCExpr::VK_LoongArch_None ||
+                      VK == LoongArchMCExpr::VK_LoongArch_CALL32 ||
+                      VK == LoongArchMCExpr::VK_LoongArch_32R_PCREL ||
+                      VK == LoongArchMCExpr::VK_LoongArch_32R_GOT_PCREL ||
+                      VK == LoongArchMCExpr::VK_LoongArch_32R_TLS_IE_PCREL ||
+                      VK == LoongArchMCExpr::VK_LoongArch_32R_TLS_DESC_PCREL;
     return IsConstantImm
                ? isInt<20>(Imm) && IsValidKind
                : LoongArchAsmParser::classifySymbolRef(getImm(), VK) &&
@@ -1514,6 +1536,35 @@ void LoongArchAsmParser::emitFuncCall36(MCInst &Inst, SMLoc IDLoc,
       getSTI());
 }
 
+void LoongArchAsmParser::emitFuncCall32(MCInst &Inst, SMLoc IDLoc,
+                                       MCStreamer &Out, bool IsTailCall) {
+  // call32 sym
+  // expands to:
+  //   pcaddu12i $ra, %call32(sym)
+  //   jirl      $ra, $ra, 0
+  //
+  // tail32 $rj, sym
+  // expands to:
+  //   pcaddu12i $rj, %call32(sym)
+  //   jirl      $r0, $rj, 0
+  MCRegister ScratchReg =
+      IsTailCall ? Inst.getOperand(0).getReg() : MCRegister(LoongArch::R1);
+  const MCExpr *Sym =
+      IsTailCall ? Inst.getOperand(1).getExpr() : Inst.getOperand(0).getExpr();
+  const LoongArchMCExpr *LE = LoongArchMCExpr::create(
+      Sym, llvm::LoongArchMCExpr::VK_LoongArch_CALL32, getContext());
+
+  Out.emitInstruction(
+      MCInstBuilder(LoongArch::PCADDU12I).addReg(ScratchReg).addExpr(LE),
+      getSTI());
+  Out.emitInstruction(
+      MCInstBuilder(LoongArch::JIRL)
+          .addReg(IsTailCall ? MCRegister(LoongArch::R0) : ScratchReg)
+          .addReg(ScratchReg)
+          .addImm(0),
+      getSTI());
+}
+
 bool LoongArchAsmParser::processInstruction(MCInst &Inst, SMLoc IDLoc,
                                             OperandVector &Operands,
                                             MCStreamer &Out) {
@@ -1573,6 +1624,12 @@ bool LoongArchAsmParser::processInstruction(MCInst &Inst, SMLoc IDLoc,
     return false;
   case LoongArch::PseudoTAIL36:
     emitFuncCall36(Inst, IDLoc, Out, /*IsTailCall=*/true);
+    return false;
+  case LoongArch::PseudoCALL32:
+    emitFuncCall32(Inst, IDLoc, Out, /*IsTailCall=*/false);
+    return false;
+  case LoongArch::PseudoTAIL32:
+    emitFuncCall32(Inst, IDLoc, Out, /*IsTailCall=*/true);
     return false;
   }
   Out.emitInstruction(Inst, getSTI());
@@ -1877,6 +1934,12 @@ bool LoongArchAsmParser::matchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
         Operands, ErrorInfo, /*Lower=*/-(1 << 19),
         /*Upper=*/(1 << 19) - 1,
         "operand must be a symbol with modifier (e.g. %pcrel_20) or an integer "
+        "in the range");
+  case Match_InvalidSImm20pcaddu12i:
+    return generateImmOutOfRangeError(
+        Operands, ErrorInfo, /*Lower=*/-(1 << 19),
+        /*Upper=*/(1 << 19) - 1,
+        "operand must be a symbol with modifier (e.g. %call32) or an integer "
         "in the range");
   case Match_InvalidSImm21lsl2:
     return generateImmOutOfRangeError(

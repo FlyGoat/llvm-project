@@ -92,6 +92,16 @@ unsigned LoongArchELFObjectWriter::getRelocType(MCContext &Ctx,
     return ELF::R_LARCH_TLS_LE64_HI12;
   case LoongArch::fixup_loongarch_call36:
     return ELF::R_LARCH_CALL36;
+  case LoongArch::fixup_loongarch_call32:
+    return ELF::R_LARCH_CALL32;
+  case LoongArch::fixup_loongarch_32r_pcrel:
+    return ELF::R_LARCH_32R_PCREL;
+  case LoongArch::fixup_loongarch_32r_got_pcrel:
+    return ELF::R_LARCH_32R_GOT_PCREL;
+  case LoongArch::fixup_loongarch_32r_tls_ie_pcrel:
+    return ELF::R_LARCH_32R_TLS_IE_PCREL;
+  case LoongArch::fixup_loongarch_32r_tls_desc_pcrel:
+    return ELF::R_LARCH_32R_TLS_DESC_PCREL;
     // TODO: Handle more fixup-kinds.
   }
 }

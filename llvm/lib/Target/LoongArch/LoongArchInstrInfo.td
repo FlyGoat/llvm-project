@@ -404,6 +404,10 @@ def simm20_pcaddi : SImm20Operand {
   let ParserMatchClass = SImmAsmOperand<20, "pcaddi">;
 }
 
+def simm20_pcaddu12i : SImm20Operand {
+  let ParserMatchClass = SImmAsmOperand<20, "pcaddu12i">;
+}
+
 def simm21_lsl2 : Operand<OtherVT> {
   let ParserMatchClass = SImmAsmOperand<21, "lsl2">;
   let EncoderMethod = "getImmOpValueAsr<2>";
@@ -779,7 +783,7 @@ let Predicates = [NotLA32R] in {
   def PCADDI    : ALU_1RI20<0x18000000, simm20_pcaddi>;
   def PCALAU12I : ALU_1RI20<0x1a000000, simm20_pcalau12i>;
 }
-def PCADDU12I : ALU_1RI20<0x1c000000, simm20>;
+def PCADDU12I : ALU_1RI20<0x1c000000, simm20_pcaddu12i>;
 def AND  : ALU_3R<0x00148000>;
 def OR   : ALU_3R<0x00150000>;
 def NOR  : ALU_3R<0x00140000>;
@@ -1626,6 +1630,17 @@ let isCall = 1, isTerminator = 1, isReturn = 1, isBarrier = 1, Uses = [R3],
 def PseudoTAIL36 : Pseudo<(outs), (ins GPR:$tmp, bare_symbol:$dst), [],
                           "tail36", "$tmp, $dst">,
                    Requires<[IsLA64]>;
+
+/// call32/taill32 macro instructions
+let isCall = 1, isBarrier = 1, isCodeGenOnly = 0, isAsmParserOnly = 1,
+    Defs = [R1], hasSideEffects = 0, mayStore = 0, mayLoad = 0 in
+def PseudoCALL32 : Pseudo<(outs), (ins bare_symbol:$dst), [],
+                          "call32", "$dst">;
+let isCall = 1, isTerminator = 1, isReturn = 1, isBarrier = 1, Uses = [R3],
+    isCodeGenOnly = 0, isAsmParserOnly = 1, hasSideEffects = 0,
+    mayStore = 0, mayLoad = 0 in
+def PseudoTAIL32 : Pseudo<(outs), (ins GPR:$tmp, bare_symbol:$dst), [],
+                          "tail32", "$tmp, $dst">;
 
 // This is a special case of the ADD_W/D instruction used to facilitate the use
 // of a fourth operand to emit a relocation on a symbol relating to this

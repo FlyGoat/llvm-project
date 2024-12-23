@@ -79,6 +79,15 @@ public:
     VK_LoongArch_TLS_LD_PCREL20_S2,
     VK_LoongArch_TLS_GD_PCREL20_S2,
     VK_LoongArch_TLS_DESC_PCREL20_S2,
+    VK_LoongArch_CALL32,
+    VK_LoongArch_32R_PCREL,
+    VK_LoongArch_32R_PCREL_LO,
+    VK_LoongArch_32R_GOT_PCREL,
+    VK_LoongArch_32R_GOT_PCREL_LO,
+    VK_LoongArch_32R_TLS_IE_PCREL,
+    VK_LoongArch_32R_TLS_IE_PCREL_LO,
+    VK_LoongArch_32R_TLS_DESC_PCREL,
+    VK_LoongArch_32R_TLS_DESC_PCREL_LO,
     VK_LoongArch_Invalid // Must be the last item.
   };
 

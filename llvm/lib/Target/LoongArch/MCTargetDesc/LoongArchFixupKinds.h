@@ -150,6 +150,16 @@ enum Fixups {
   fixup_loongarch_tls_gd_pcrel20_s2,
   // 20-bit fixup corresponding to %desc_pcrel_20(foo) for instruction pcaddi.
   fixup_loongarch_tls_desc_pcrel20_s2,
+  // 32-bit fixup corresponding to %call32(foo)
+  fixup_loongarch_call32,
+  // 32-bit PC-relative fixup
+  fixup_loongarch_32r_pcrel,
+  // 32-bit PC-relative GOT fixup
+  fixup_loongarch_32r_got_pcrel,
+  // 32-bit PC-relative TLS IE fixup
+  fixup_loongarch_32r_tls_ie_pcrel,
+  // 32-bit PC-relative TLS DESC fixup
+  fixup_loongarch_32r_tls_desc_pcrel,
 };
 } // end namespace LoongArch
 } // end namespace llvm

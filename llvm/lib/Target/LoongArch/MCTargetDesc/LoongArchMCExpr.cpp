@@ -173,6 +173,22 @@ StringRef LoongArchMCExpr::getVariantKindName(VariantKind Kind) {
     return "gd_pcrel_20";
   case VK_LoongArch_TLS_DESC_PCREL20_S2:
     return "desc_pcrel_20";
+  case VK_LoongArch_32R_PCREL:
+    return "32r_pcrel";
+  case VK_LoongArch_32R_PCREL_LO:
+    return "32r_pcrel_lo";
+  case VK_LoongArch_32R_GOT_PCREL:
+    return "32r_got_pcrel";
+  case VK_LoongArch_32R_GOT_PCREL_LO:
+    return "32r_got_pcrel_lo";
+  case VK_LoongArch_32R_TLS_IE_PCREL:
+    return "32r_ie_pcrel";
+  case VK_LoongArch_32R_TLS_IE_PCREL_LO:
+    return "32r_ie_pcrel_lo";
+  case VK_LoongArch_32R_TLS_DESC_PCREL:
+    return "32r_desc_pcrel";
+  case VK_LoongArch_32R_TLS_DESC_PCREL_LO:
+    return "32r_desc_pcrel_lo";
   }
 }
 
@@ -233,6 +249,14 @@ LoongArchMCExpr::getVariantKindForName(StringRef name) {
       .Case("ld_pcrel_20", VK_LoongArch_TLS_LD_PCREL20_S2)
       .Case("gd_pcrel_20", VK_LoongArch_TLS_GD_PCREL20_S2)
       .Case("desc_pcrel_20", VK_LoongArch_TLS_DESC_PCREL20_S2)
+      .Case("32r_pcrel", VK_LoongArch_32R_PCREL)
+      .Case("32r_pcrel_lo", VK_LoongArch_32R_PCREL_LO)
+      .Case("32r_got_pcrel", VK_LoongArch_32R_GOT_PCREL)
+      .Case("32r_got_pcrel_lo", VK_LoongArch_32R_GOT_PCREL_LO)
+      .Case("32r_ie_pcrel", VK_LoongArch_32R_TLS_IE_PCREL)
+      .Case("32r_ie_pcrel_lo", VK_LoongArch_32R_TLS_IE_PCREL_LO)
+      .Case("32r_desc_pcrel", VK_LoongArch_32R_TLS_DESC_PCREL)
+      .Case("32r_desc_pcrel_lo", VK_LoongArch_32R_TLS_DESC_PCREL_LO)
       .Default(VK_LoongArch_Invalid);
 }
 
@@ -278,6 +302,7 @@ void LoongArchMCExpr::fixELFSymbolsInTLSFixups(MCAssembler &Asm) const {
   case VK_LoongArch_TLS_LD_PCREL20_S2:
   case VK_LoongArch_TLS_GD_PCREL20_S2:
   case VK_LoongArch_TLS_DESC_PCREL20_S2:
+  case VK_LoongArch_32R_TLS_DESC_PCREL:
     break;
   }
   fixELFSymbolsInTLSFixupsImpl(getSubExpr(), Asm);

@@ -432,11 +432,13 @@ RelExpr LoongArch::getRelExpr(const RelType type, const Symbol &s,
   case R_LARCH_32_PCREL:
   case R_LARCH_64_PCREL:
   case R_LARCH_PCREL20_S2:
+  case R_LARCH_32R_PCREL:
     return R_PC;
   case R_LARCH_B16:
   case R_LARCH_B21:
   case R_LARCH_B26:
   case R_LARCH_CALL36:
+  case R_LARCH_CALL32:
     return R_PLT_PC;
   case R_LARCH_GOT_PC_HI20:
   case R_LARCH_GOT64_PC_LO20:
@@ -447,6 +449,8 @@ RelExpr LoongArch::getRelExpr(const RelType type, const Symbol &s,
     return RE_LOONGARCH_GOT_PAGE_PC;
   case R_LARCH_GOT_PC_LO12:
   case R_LARCH_TLS_IE_PC_LO12:
+  case R_LARCH_32R_GOT_PCREL:
+  case R_LARCH_32R_TLS_IE_PCREL:
     return RE_LOONGARCH_GOT;
   case R_LARCH_TLS_LD_PC_HI20:
   case R_LARCH_TLS_GD_PC_HI20:
@@ -516,6 +520,7 @@ RelExpr LoongArch::getRelExpr(const RelType type, const Symbol &s,
   case R_LARCH_TLS_GD_PCREL20_S2:
     return R_TLSGD_PC;
   case R_LARCH_TLS_DESC_PCREL20_S2:
+  case R_LARCH_32R_TLS_DESC_PCREL:
     return R_TLSDESC_PC;
 
   // Other known relocs that are explicitly unimplemented:
@@ -572,6 +577,19 @@ void LoongArch::relocate(uint8_t *loc, const Relocation &rel,
     checkAlignment(ctx, loc, val, 4, rel);
     write32le(loc, setJ20(read32le(loc), val >> 2));
     return;
+  case R_LARCH_32R_PCREL: {
+      // For LA32R PC-relative addressing with pcaddu12i + addi.w/ld.[bhw]
+      checkInt(ctx, loc, val, 32, rel);
+      checkAlignment(ctx, loc, val, 4, rel);
+      
+      // High 20 bits need +0x800 adjustment
+      uint32_t hi20 = extractBits(val + 0x800, 31, 12);
+      uint32_t lo12 = extractBits(val, 11, 0);
+      
+      write32le(loc, setJ20(read32le(loc), hi20));
+      write32le(loc + 4, setK12(read32le(loc + 4), lo12));
+      return;
+  }
 
   case R_LARCH_B16:
     checkInt(ctx, loc, val, 18, rel);
@@ -610,6 +628,22 @@ void LoongArch::relocate(uint8_t *loc, const Relocation &rel,
     return;
   }
 
+  case R_LARCH_CALL32: {
+      checkInt(ctx, loc, val, 32, rel);
+      checkAlignment(ctx, loc, val, 4, rel);
+      
+      // Extract bits for pcaddu12i: [31:12]
+      uint32_t hi20 = extractBits(val, 31, 12);
+      // Extract bits for jirl: [11:2] 
+      uint32_t lo10 = extractBits(val, 11, 2);
+
+      // Update pcaddu12i instruction
+      write32le(loc, setJ20(read32le(loc), hi20));
+      // Update jirl instruction
+      write32le(loc + 4, setK16(read32le(loc + 4), lo10));
+      return;
+  }
+
   // Relocs intended for `addi`, `ld` or `st`.
   case R_LARCH_PCALA_LO12:
     // We have to again inspect the insn word to handle the R_LARCH_PCALA_LO12
@@ -636,6 +670,20 @@ void LoongArch::relocate(uint8_t *loc, const Relocation &rel,
   case R_LARCH_TLS_DESC_LO12:
     write32le(loc, setK12(read32le(loc), extractBits(val, 11, 0)));
     return;
+  case R_LARCH_32R_GOT_PCREL:
+  case R_LARCH_32R_TLS_IE_PCREL: 
+  case R_LARCH_32R_TLS_DESC_PCREL: {
+      // For LA32R GOT entry loading with pcaddu12i + ld.w
+      checkInt(ctx, loc, val, 32, rel);
+      checkAlignment(ctx, loc, val, 4, rel);
+      
+      uint32_t hi20 = extractBits(val + 0x800, 31, 12);
+      uint32_t lo12 = extractBits(val, 11, 0);
+      
+      write32le(loc, setJ20(read32le(loc), hi20));
+      write32le(loc + 4, setK12(read32le(loc + 4), lo12));
+      return;
+  }
 
   // Relocs intended for `lu12i.w` or `pcalau12i`.
   case R_LARCH_ABS_HI20:

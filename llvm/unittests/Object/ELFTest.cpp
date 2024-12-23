@@ -249,6 +249,16 @@ TEST(ELFTest, getELFRelocationTypeNameForLoongArch) {
             getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_64_PCREL));
   EXPECT_EQ("R_LARCH_CALL36",
             getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_CALL36));
+  EXPECT_EQ("R_LARCH_CALL32",
+            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_CALL32));
+  EXPECT_EQ("R_LARCH_32R_PCREL",
+            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_32R_PCREL));
+  EXPECT_EQ("R_LARCH_32R_GOT_PCREL",
+            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_32R_GOT_PCREL));
+  EXPECT_EQ("R_LARCH_32R_TLS_IE_PCREL",
+            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_32R_TLS_IE_PCREL));
+  EXPECT_EQ("R_LARCH_32R_TLS_DESC_PCREL",
+            getELFRelocationTypeName(EM_LOONGARCH, R_LARCH_32R_TLS_DESC_PCREL));
 }
 
 TEST(ELFTest, getELFRelativeRelocationType) {

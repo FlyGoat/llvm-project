@@ -298,6 +298,21 @@ LoongArchMCCodeEmitter::getExprOpValue(const MCInst &MI, const MCOperand &MO,
     case LoongArchMCExpr::VK_LoongArch_TLS_DESC_PCREL20_S2:
       FixupKind = LoongArch::fixup_loongarch_tls_desc_pcrel20_s2;
       break;
+    case LoongArchMCExpr::VK_LoongArch_CALL32:
+      FixupKind = LoongArch::fixup_loongarch_call32;
+      break;
+    case LoongArchMCExpr::VK_LoongArch_32R_PCREL:
+      FixupKind = LoongArch::fixup_loongarch_32r_pcrel;
+      break;
+    case LoongArchMCExpr::VK_LoongArch_32R_GOT_PCREL:
+      FixupKind = LoongArch::fixup_loongarch_32r_got_pcrel; 
+      break;
+    case LoongArchMCExpr::VK_LoongArch_32R_TLS_IE_PCREL:
+      FixupKind = LoongArch::fixup_loongarch_32r_tls_ie_pcrel;
+      break;
+    case LoongArchMCExpr::VK_LoongArch_32R_TLS_DESC_PCREL:
+      FixupKind = LoongArch::fixup_loongarch_32r_tls_desc_pcrel;
+      break;
     }
   } else if (Kind == MCExpr::SymbolRef &&
              cast<MCSymbolRefExpr>(Expr)->getKind() ==

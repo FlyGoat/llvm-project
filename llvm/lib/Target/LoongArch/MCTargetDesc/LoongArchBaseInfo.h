@@ -54,6 +54,12 @@ enum {
   MO_DESC64_PC_LO,
   MO_DESC_LD,
   MO_DESC_CALL,
+  MO_CALL32,
+  MO_32R_PCREL,
+  MO_32R_GOT_PCREL,
+  MO_32R_IE_PCREL,
+  MO_32R_DESC_PCREL,
+
   // TODO: Add more flags.
 };
 
