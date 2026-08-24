@@ -135,6 +135,24 @@
 // MIPS64-MIPS32-MIPS32R2: -cc1as
 // MIPS64-MIPS32-MIPS32R2-NOT: "-target-feature" "+mips64"
 // MIPS64-MIPS32-MIPS32R2-NOT: "-target-feature" "+mips32"
+
 // MIPS64-MIPS32-MIPS32R2: "-target-feature" "+mips32r2"
 // MIPS64-MIPS32-MIPS32R2-NOT: "-target-feature" "+mips64"
 // MIPS64-MIPS32-MIPS32R2-NOT: "-target-feature" "+mips32"
+
+// RUN: %clang --target=mips64el-linux-gnu -### -fintegrated-as -c %s \
+// RUN:   -Wa,-mfix-loongson3-llsc 2>&1 | FileCheck -check-prefix=LLSC-FIX %s
+// LLSC-FIX: -cc1as
+// LLSC-FIX: "-target-feature" "+fix-loongson3-llsc"
+
+// RUN: %clang --target=mips64el-linux-gnu -### -fintegrated-as -c %s \
+// RUN:   -Wa,-mfix-loongson3-llsc,-mno-fix-loongson3-llsc 2>&1 \
+// RUN:   | FileCheck -check-prefix=LLSC-NOFIX %s
+// LLSC-NOFIX: -cc1as
+// LLSC-NOFIX: "-target-feature" "+fix-loongson3-llsc"
+// LLSC-NOFIX-SAME: "-target-feature" "-fix-loongson3-llsc"
+
+// RUN: %clang --target=mips64el-linux-gnu -### -fno-integrated-as -c %s \
+// RUN:   -Wa,-mfix-loongson3-llsc 2>&1 \
+// RUN:   | FileCheck -check-prefix=LLSC-EXTERNAL %s
+// LLSC-EXTERNAL: "-mfix-loongson3-llsc"

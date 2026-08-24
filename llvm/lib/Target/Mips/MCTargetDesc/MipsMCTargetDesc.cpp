@@ -198,8 +198,9 @@ static MCStreamer *createMCStreamer(const Triple &T, MCContext &Context,
                                     std::unique_ptr<MCObjectWriter> &&OW,
                                     std::unique_ptr<MCCodeEmitter> &&Emitter) {
   MCStreamer *S;
-  S = createMipsELFStreamer(Context, std::move(MAB), std::move(OW),
-                            std::move(Emitter));
+  S = createMipsELFStreamer(
+      Context, std::move(MAB), std::move(OW), std::move(Emitter),
+      std::unique_ptr<MCInstrInfo>(createMipsMCInstrInfo()));
   return S;
 }
 

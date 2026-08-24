@@ -24,18 +24,22 @@ namespace llvm {
 class MCAsmBackend;
 class MCCodeEmitter;
 class MCContext;
+class MCInstrInfo;
 class MCSubtargetInfo;
 struct MCDwarfFrameInfo;
 
 class MipsELFStreamer : public MCELFStreamer {
+  std::unique_ptr<MCInstrInfo> MCII;
   SmallVector<std::unique_ptr<MipsOptionRecord>, 8> MipsOptionRecords;
   MipsRegInfoRecord *RegInfoRecord;
   SmallVector<MCSymbol*, 4> Labels;
+  bool PreviousWasSync = false;
 
 public:
   MipsELFStreamer(MCContext &Context, std::unique_ptr<MCAsmBackend> MAB,
                   std::unique_ptr<MCObjectWriter> OW,
-                  std::unique_ptr<MCCodeEmitter> Emitter);
+                  std::unique_ptr<MCCodeEmitter> Emitter,
+                  std::unique_ptr<MCInstrInfo> MCII);
 
   /// Overriding this function allows us to add arbitrary behaviour before the
   /// \p Inst is actually emitted. For example, we can inspect the operands and
@@ -74,7 +78,8 @@ public:
 MCELFStreamer *createMipsELFStreamer(MCContext &Context,
                                      std::unique_ptr<MCAsmBackend> MAB,
                                      std::unique_ptr<MCObjectWriter> OW,
-                                     std::unique_ptr<MCCodeEmitter> Emitter);
+                                     std::unique_ptr<MCCodeEmitter> Emitter,
+                                     std::unique_ptr<MCInstrInfo> MCII);
 } // end namespace llvm
 
 #endif // LLVM_LIB_TARGET_MIPS_MCTARGETDESC_MIPSELFSTREAMER_H

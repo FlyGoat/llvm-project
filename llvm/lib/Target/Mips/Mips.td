@@ -189,6 +189,10 @@ def FeatureCnMipsP : SubtargetFeature<"cnmipsp", "HasCnMipsP",
 def FeatureFixR5900 : SubtargetFeature<"fix-r5900", "FixR5900", "true",
                                        "Enable R5900 short loop erratum fix">;
 
+def FeatureFixLoongson3LLSC
+    : SubtargetFeature<"fix-loongson3-llsc", "FixLoongson3LLSC", "true",
+                       "Work around the Loongson 3 LL/SC erratum">;
+
 def FeatureR5900 : SubtargetFeature<"r5900", "IsR5900", "true",
                                     "R5900 (PS2 Emotion Engine) Support",
                                     [FeatureMips3, FeatureSingleFloat,

@@ -567,6 +567,12 @@ features cannot lower the translation-unit ABI level;
 
 #### LoongArch Support
 
+#### MIPS Support
+
+- Added support for the `-Wa,-mfix-loongson3-llsc` assembler option, which
+  inserts a `sync` before load-linked instructions to work around the Loongson
+  3 LL/SC erratum.
+
 #### RISC-V Support
 
 - Fixed a bug where the `interrupt` attribute did not accept `machine` together

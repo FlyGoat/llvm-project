@@ -130,7 +130,9 @@ enum {
   // Instruction has a forbidden slot.
   HasForbiddenSlot = 1 << 5,
   //  Instruction uses an $fcc<x> register.
-  HasFCCRegOperand = 1 << 6
+  HasFCCRegOperand = 1 << 6,
+  // Instruction is part of an LL/SC pair.
+  IsLLSC = 1 << 7
 
 };
 

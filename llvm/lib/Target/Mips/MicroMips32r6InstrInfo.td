@@ -783,6 +783,7 @@ class SC_MMR6_DESC_BASE<string opstr> {
   string AsmString = !strconcat(opstr, "\t$rt, $addr");
   string BaseOpcode = opstr;
   bit mayStore = 1;
+  bit isLLSC = 1;
   string Constraints = "$rt = $dst";
   string DecoderMethod = "DecodeMemMMImm9";
 }
@@ -793,6 +794,7 @@ class LL_MMR6_DESC_BASE<string opstr> {
   string AsmString = !strconcat(opstr, "\t$rt, $addr");
   string BaseOpcode = opstr;
   bit mayLoad = 1;
+  bit isLLSC = 1;
   string DecoderMethod = "DecodeMemMMImm9";
 }
 

@@ -259,6 +259,7 @@ class LLBaseMM<string opstr, RegisterOperand RO> :
          !strconcat(opstr, "\t$rt, $addr"), [], FrmI> {
   let DecoderMethod = "DecodeMemMMImm12";
   let mayLoad = 1;
+  let isLLSC = 1;
 }
 
 class LLEBaseMM<string opstr, RegisterOperand RO> :
@@ -267,6 +268,7 @@ class LLEBaseMM<string opstr, RegisterOperand RO> :
   let DecoderMethod = "DecodeMemMMImm9";
   string BaseOpcode = opstr;
   let mayLoad = 1;
+  let isLLSC = 1;
 }
 
 class SCBaseMM<string opstr, RegisterOperand RO> :
@@ -274,6 +276,7 @@ class SCBaseMM<string opstr, RegisterOperand RO> :
          !strconcat(opstr, "\t$rt, $addr"), [], FrmI> {
   let DecoderMethod = "DecodeMemMMImm12";
   let mayStore = 1;
+  let isLLSC = 1;
   let Constraints = "$rt = $dst";
 }
 
@@ -283,6 +286,7 @@ class SCEBaseMM<string opstr, RegisterOperand RO> :
   let DecoderMethod = "DecodeMemMMImm9";
   string BaseOpcode = opstr;
   let mayStore = 1;
+  let isLLSC = 1;
   let Constraints = "$rt = $dst";
 }
 

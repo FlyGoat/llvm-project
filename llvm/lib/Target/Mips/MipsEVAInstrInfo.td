@@ -120,6 +120,7 @@ class LLE_DESC_BASE<string instr_asm, RegisterOperand GPROpnd> {
   list<dag> Pattern = [];
   string BaseOpcode = instr_asm;
   bit mayLoad = 1;
+  bit isLLSC = 1;
   string DecoderMethod = "DecodeMemEVA";
 }
 
@@ -132,6 +133,7 @@ class SCE_DESC_BASE<string instr_asm, RegisterOperand GPROpnd> {
   list<dag> Pattern = [];
   string BaseOpcode = instr_asm;
   bit mayStore = 1;
+  bit isLLSC = 1;
   string Constraints = "$rt = $dst";
   string DecoderMethod = "DecodeMemEVA";
 }

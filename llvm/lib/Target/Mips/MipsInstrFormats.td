@@ -99,12 +99,14 @@ class MipsInst<dag outs, dag ins, string asmstr, list<dag> pattern,
   bit hasForbiddenSlot = 0; // Instruction has a forbidden slot.
   bit hasFCCRegOperand = 0; // Instruction uses $fcc<X> register and is
                             // present in MIPS-I to MIPS-III.
+  bit isLLSC           = 0; // Instruction is part of an LL/SC pair.
 
   // TSFlags layout should be kept in sync with MCTargetDesc/MipsBaseInfo.h.
   let TSFlags{3-0}   = FormBits;
   let TSFlags{4}     = isCTI;
   let TSFlags{5}     = hasForbiddenSlot;
   let TSFlags{6}     = hasFCCRegOperand;
+  let TSFlags{7}     = isLLSC;
 
   let DecoderNamespace = "Mips";
 }

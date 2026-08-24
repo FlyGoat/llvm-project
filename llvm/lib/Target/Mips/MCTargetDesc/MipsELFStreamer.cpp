@@ -7,8 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "MipsELFStreamer.h"
+#include "MipsBaseInfo.h"
+#include "MipsMCTargetDesc.h"
 #include "MipsOptionRecord.h"
 #include "MipsTargetStreamer.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
@@ -16,7 +19,9 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
+#include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbolELF.h"
 
 using namespace llvm;
@@ -24,9 +29,10 @@ using namespace llvm;
 MipsELFStreamer::MipsELFStreamer(MCContext &Context,
                                  std::unique_ptr<MCAsmBackend> MAB,
                                  std::unique_ptr<MCObjectWriter> OW,
-                                 std::unique_ptr<MCCodeEmitter> Emitter)
-    : MCELFStreamer(Context, std::move(MAB), std::move(OW),
-                    std::move(Emitter)) {
+                                 std::unique_ptr<MCCodeEmitter> Emitter,
+                                 std::unique_ptr<MCInstrInfo> MCII)
+    : MCELFStreamer(Context, std::move(MAB), std::move(OW), std::move(Emitter)),
+      MCII(std::move(MCII)) {
   RegInfoRecord = new MipsRegInfoRecord(this, Context);
   MipsOptionRecords.push_back(
       std::unique_ptr<MipsRegInfoRecord>(RegInfoRecord));
@@ -34,7 +40,22 @@ MipsELFStreamer::MipsELFStreamer(MCContext &Context,
 
 void MipsELFStreamer::emitInstruction(const MCInst &Inst,
                                       const MCSubtargetInfo &STI) {
+  const MCInstrDesc &Desc = MCII->get(Inst.getOpcode());
+
+  // Insert a sync before LL/LLD unless one was just emitted.
+  if (STI.hasFeature(Mips::FeatureFixLoongson3LLSC) &&
+      (Desc.TSFlags & MipsII::IsLLSC) && Desc.mayLoad() && !PreviousWasSync) {
+    MCInst Sync;
+    Sync.setOpcode(Mips::SYNC);
+    Sync.addOperand(MCOperand::createImm(0));
+    Sync.setLoc(Inst.getLoc());
+    MCELFStreamer::emitInstruction(Sync, STI);
+  }
+
   MCELFStreamer::emitInstruction(Inst, STI);
+
+  PreviousWasSync = llvm::is_contained(
+      {Mips::SYNC, Mips::SYNC_MM, Mips::SYNC_MMR6}, Inst.getOpcode());
 
   MCContext &Context = getContext();
   const MCRegisterInfo *MCRegInfo = Context.getRegisterInfo();
@@ -87,22 +108,26 @@ void MipsELFStreamer::createPendingLabelRelocs() {
 void MipsELFStreamer::emitLabel(MCSymbol *Symbol, SMLoc Loc) {
   MCELFStreamer::emitLabel(Symbol);
   Labels.push_back(Symbol);
+  PreviousWasSync = false;
 }
 
 void MipsELFStreamer::switchSection(MCSection *Section, uint32_t Subsection) {
   MCELFStreamer::switchSection(Section, Subsection);
   Labels.clear();
+  PreviousWasSync = false;
 }
 
 void MipsELFStreamer::emitValueImpl(const MCExpr *Value, unsigned Size,
                                     SMLoc Loc) {
   MCELFStreamer::emitValueImpl(Value, Size, Loc);
   Labels.clear();
+  PreviousWasSync = false;
 }
 
 void MipsELFStreamer::emitIntValue(uint64_t Value, unsigned Size) {
   MCELFStreamer::emitIntValue(Value, Size);
   Labels.clear();
+  PreviousWasSync = false;
 }
 
 void MipsELFStreamer::EmitMipsOptionRecords() {
@@ -110,11 +135,10 @@ void MipsELFStreamer::EmitMipsOptionRecords() {
     I->EmitMipsOptionRecord();
 }
 
-MCELFStreamer *
-llvm::createMipsELFStreamer(MCContext &Context,
-                            std::unique_ptr<MCAsmBackend> MAB,
-                            std::unique_ptr<MCObjectWriter> OW,
-                            std::unique_ptr<MCCodeEmitter> Emitter) {
+MCELFStreamer *llvm::createMipsELFStreamer(
+    MCContext &Context, std::unique_ptr<MCAsmBackend> MAB,
+    std::unique_ptr<MCObjectWriter> OW, std::unique_ptr<MCCodeEmitter> Emitter,
+    std::unique_ptr<MCInstrInfo> MCII) {
   return new MipsELFStreamer(Context, std::move(MAB), std::move(OW),
-                             std::move(Emitter));
+                             std::move(Emitter), std::move(MCII));
 }

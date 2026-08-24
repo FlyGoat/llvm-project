@@ -2717,6 +2717,13 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
           Msa = false;
           continue;
         }
+        if (Value == "-mfix-loongson3-llsc" ||
+            Value == "-mno-fix-loongson3-llsc") {
+          CmdArgs.push_back("-target-feature");
+          CmdArgs.push_back(Value.starts_with("-mno-") ? "-fix-loongson3-llsc"
+                                                       : "+fix-loongson3-llsc");
+          continue;
+        }
         MipsTargetFeature = llvm::StringSwitch<const char *>(Value)
                                 .Case("-mips1", "+mips1")
                                 .Case("-mips2", "+mips2")

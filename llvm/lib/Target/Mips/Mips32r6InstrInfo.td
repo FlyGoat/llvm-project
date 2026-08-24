@@ -728,6 +728,7 @@ class LL_R6_DESC_BASE<string instr_asm, RegisterOperand GPROpnd,
   string AsmString = !strconcat(instr_asm, "\t$rt, $addr");
   list<dag> Pattern = [];
   bit mayLoad = 1;
+  bit isLLSC = 1;
 }
 
 class LL_R6_DESC : LL_R6_DESC_BASE<"ll", GPR32Opnd, mem_simm9_exp>;
@@ -738,6 +739,7 @@ class SC_R6_DESC_BASE<string instr_asm, RegisterOperand GPROpnd> {
   string AsmString = !strconcat(instr_asm, "\t$rt, $addr");
   list<dag> Pattern = [];
   bit mayStore = 1;
+  bit isLLSC = 1;
   string Constraints = "$rt = $dst";
 }
 

@@ -494,3 +494,9 @@
 // RUN:     -mno-unaligned-access -mstrict-align \
 // RUN:     -mno-strict-align 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-NO-STRICT-ALIGN %s
+
+// -Wa,-mfix-loongson3-llsc
+// RUN: %clang --target=mips64el-unknown-linux-gnu -### -c %s \
+// RUN:     -Wa,-mfix-loongson3-llsc 2>&1 \
+// RUN:   | FileCheck --check-prefix=CHECK-WA-FIX-LOONGSON3-LLSC %s
+// CHECK-WA-FIX-LOONGSON3-LLSC: "-target-feature" "+fix-loongson3-llsc"

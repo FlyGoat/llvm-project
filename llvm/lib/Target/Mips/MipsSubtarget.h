@@ -129,6 +129,9 @@ class MipsSubtarget : public MipsGenSubtargetInfo {
   // FixR5900 - Enable R5900 short loop erratum fix.
   bool FixR5900;
 
+  // FixLoongson3LLSC - Enable Loongson 3 LL/SC erratum fix.
+  bool FixLoongson3LLSC;
+
   // isLinux - Target system is Linux. Is false we consider ELFOS for now.
   bool IsLinux;
 

@@ -1884,6 +1884,7 @@ class LLBase<string opstr, RegisterOperand RO, DAGOperand MO = mem> :
          [], FrmI, opstr> {
   let DecoderMethod = "DecodeMem";
   let mayLoad = 1;
+  let isLLSC = 1;
 }
 
 class SCBase<string opstr, RegisterOperand RO> :
@@ -1891,6 +1892,7 @@ class SCBase<string opstr, RegisterOperand RO> :
          !strconcat(opstr, "\t$rt, $addr"), [], FrmI> {
   let DecoderMethod = "DecodeMem";
   let mayStore = 1;
+  let isLLSC = 1;
   let Constraints = "$rt = $dst";
 }
 
