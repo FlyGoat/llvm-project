@@ -708,6 +708,11 @@ bool MipsInstrInfo::isAsCheapAsAMove(const MachineInstr &MI) const {
 unsigned MipsInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   switch (MI.getOpcode()) {
   default:
+    // MachineBasicBlock iterators skip bundled successors. Include them when
+    // MI is the bundle head, but not when this method is called recursively
+    // for an instruction inside the bundle.
+    if (MI.isBundledWithSucc() && !MI.isBundledWithPred())
+      return MI.getDesc().getSize() + getInstBundleSize(MI);
     if (MI.hasDelaySlot()) {
       // instr + 1 nop
       return MI.getDesc().getSize() + 4;

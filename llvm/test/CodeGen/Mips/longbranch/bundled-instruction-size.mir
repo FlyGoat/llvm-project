@@ -1,0 +1,87 @@
+# RUN: llc -mtriple=mips64el-unknown-linux-gnuabi64 \
+# RUN:   -start-before mips-delay-slot-filler -filetype=obj -o /dev/null %s
+# RUN: llc -mtriple=mips64el-unknown-linux-gnuabi64 \
+# RUN:   -start-before mips-delay-slot-filler -stop-after mips-branch-expansion \
+# RUN:   -o - %s | FileCheck %s
+
+# Bundled delay-slot and forbidden-slot nops push the first branch in each
+# function beyond its PC16 range. Make sure long-branch expansion counts the
+# complete bundles.
+
+--- |
+  define void @delay_slot_bundle_size(i64 %a, i64 %b) #0 {
+    ret void
+  }
+
+  define void @forbidden_slot_bundle_size(i64 %a, i64 %b) #1 {
+    ret void
+  }
+
+  attributes #0 = { "target-cpu"="mips64" }
+  attributes #1 = { "target-cpu"="mips64r6" }
+...
+---
+name:            delay_slot_bundle_size
+alignment:       4
+tracksRegLiveness: true
+body:             |
+  ; CHECK-LABEL: name: delay_slot_bundle_size
+  ; CHECK: bb.0:
+  ; CHECK: BEQ64 $a0_64, $a1_64, %bb.{{[0-9]+}}
+  ; CHECK-NEXT: $zero = SLL $zero, 0
+  ; CHECK: J %bb.{{[0-9]+}}
+  ; CHECK-NEXT: $zero = SLL $zero, 0
+  ; CHECK: BNE64 undef $a0_64, undef $a1_64, %bb.{{[0-9]+}}
+  ; CHECK-NEXT: $zero = SLL $zero, 0
+  bb.0:
+    successors: %bb.1, %bb.3
+    liveins: $a0_64, $a1_64
+
+    BNE64 undef $a0_64, undef $a1_64, %bb.3, implicit-def $at
+
+  bb.1:
+    successors: %bb.2, %bb.3
+
+    INLINEASM &".space 131052", sideeffect attdialect
+    BNE64 undef $a0_64, undef $a1_64, %bb.3, implicit-def $at
+
+  bb.2:
+    successors: %bb.3
+
+    PseudoReturn64 undef $ra_64
+
+  bb.3:
+    PseudoReturn64 undef $ra_64
+...
+---
+name:            forbidden_slot_bundle_size
+alignment:       4
+tracksRegLiveness: true
+body:             |
+  ; CHECK-LABEL: name: forbidden_slot_bundle_size
+  ; CHECK: bb.0:
+  ; CHECK: BEQC64 $a0_64, $a1_64, %bb.{{[0-9]+}}
+  ; CHECK-NEXT: $zero = SLL $zero, 0
+  ; CHECK: BC %bb.{{[0-9]+}}
+  ; CHECK: BNEC64 undef $a0_64, undef $a1_64, %bb.{{[0-9]+}}
+  ; CHECK-NEXT: $zero = SLL $zero, 0
+  bb.0:
+    successors: %bb.1, %bb.3
+    liveins: $a0_64, $a1_64
+
+    BNEC64 undef $a0_64, undef $a1_64, %bb.3, implicit-def $at
+
+  bb.1:
+    successors: %bb.2, %bb.3
+
+    INLINEASM &".space 131056", sideeffect attdialect
+    BNEC64 undef $a0_64, undef $a1_64, %bb.3, implicit-def $at
+
+  bb.2:
+    successors: %bb.3
+
+    JIC undef $ra, 0, implicit-def $at
+
+  bb.3:
+    PseudoReturn64 undef $ra_64
+...
