@@ -17,10 +17,10 @@ entry:
 ; 32-GPR:        cmp.eq.s $[[FGRCC:f[0-9]+]], $f12, $f14
 ; 64-GPR:        cmp.eq.s $[[FGRCC:f[0-9]+]], $f12, $f13
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
-; FIXME: We ought to be able to transform not+bnez -> beqz
-; GPR:           not      $[[GPRCC]], $[[GPRCC]]
-; 32-GPR:        bnez     $[[GPRCC]], $BB0_2
-; 64-GPR:        bnezc    $[[GPRCC]], .LBB0_2
+; GPR-NOT:       not
+; GPR-NOT:       andi
+; 32-GPR:        beqz     $[[GPRCC]], $BB0_2
+; 64-GPR:        beqzc    $[[GPRCC]], .LBB0_2
 
   %cmp = fcmp oeq float %f2, %f3
   br i1 %cmp, label %if.then, label %if.else
@@ -54,6 +54,7 @@ entry:
 ; 64-GPR:        cmp.ule.s $[[FGRCC:f[0-9]+]], $f13, $f12
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
 ; GPR-NOT:       not      $[[GPRCC]], $[[GPRCC]]
+; GPR-NOT:       andi
 ; 32-GPR:        bnez     $[[GPRCC]], $BB1_2
 ; 64-GPR:        bnezc    $[[GPRCC]], .LBB1_2
 
@@ -85,6 +86,7 @@ entry:
 ; 64-GPR:        cmp.ult.s $[[FGRCC:f[0-9]+]], $f13, $f12
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
 ; GPR-NOT:       not      $[[GPRCC]], $[[GPRCC]]
+; GPR-NOT:       andi
 ; 32-GPR:        beqz     $[[GPRCC]], $BB2_2
 ; 64-GPR:        beqzc    $[[GPRCC]], .LBB2_2
 
@@ -115,10 +117,11 @@ entry:
 ; 32-GPR:        cmp.eq.d $[[FGRCC:f[0-9]+]], $f12, $f14
 ; 64-GPR:        cmp.eq.d $[[FGRCC:f[0-9]+]], $f12, $f13
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
-; FIXME: We ought to be able to transform not+bnez -> beqz
-; GPR:           not      $[[GPRCC]], $[[GPRCC]]
-; 32-GPR:        bnezc    $[[GPRCC]], $BB3_2
-; 64-GPR:        bnezc    $[[GPRCC]], .LBB3_2
+; GPR-NOT:       not
+; GPR-NOT:       andi
+; 32-GPR:        beqz     $[[GPRCC]], $BB3_2
+; 32-GPR-NEXT:   addu     $gp, $2, $25
+; 64-GPR:        beqzc    $[[GPRCC]], .LBB3_2
 
   %cmp = fcmp oeq double %f2, %f3
   br i1 %cmp, label %if.then, label %if.else
@@ -148,7 +151,9 @@ entry:
 ; 64-GPR:        cmp.ule.d $[[FGRCC:f[0-9]+]], $f13, $f12
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
 ; GPR-NOT:       not      $[[GPRCC]], $[[GPRCC]]
-; 32-GPR:        bnezc    $[[GPRCC]], $BB4_2
+; GPR-NOT:       andi
+; 32-GPR:        bnez     $[[GPRCC]], $BB4_2
+; 32-GPR-NEXT:   addu     $gp, $2, $25
 ; 64-GPR:        bnezc    $[[GPRCC]], .LBB4_2
 
   %cmp = fcmp olt double %f2, %f3
@@ -179,7 +184,9 @@ entry:
 ; 64-GPR:        cmp.ult.d $[[FGRCC:f[0-9]+]], $f13, $f12
 ; GPR:           mfc1     $[[GPRCC:[0-9]+]], $[[FGRCC:f[0-9]+]]
 ; GPR-NOT:       not      $[[GPRCC]], $[[GPRCC]]
-; 32-GPR:        beqzc    $[[GPRCC]], $BB5_2
+; GPR-NOT:       andi
+; 32-GPR:        beqz     $[[GPRCC]], $BB5_2
+; 32-GPR-NEXT:   addu     $gp, $2, $25
 ; 64-GPR:        beqzc    $[[GPRCC]], .LBB5_2
 
   %cmp = fcmp ugt double %f2, %f3
