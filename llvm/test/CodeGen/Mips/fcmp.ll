@@ -1091,8 +1091,7 @@ entry:
 ; 32-CMP-DAG:    add.s    $[[T0:f[0-9]+]], $f14, $f12
 ; 32-CMP-DAG:    lwc1     $[[T1:f[0-9]+]], %lo($CPI32_0)(
 ; 32-CMP-DAG:    cmp.le.s $[[T2:f[0-9]+]], $[[T0]], $[[T1]]
-; 32-CMP-DAG:    mfc1     $[[T3:[0-9]+]], $[[T2]]
-; 32-CMP-DAG:    bnezc    $[[T3]],
+; 32-CMP-DAG:    bc1nez   $[[T2]],
 
 ; 64-C-DAG:      add.s    $[[T0:f[0-9]+]], $f13, $f12
 ; 64-C-DAG:      lwc1     $[[T1:f[0-9]+]], %lo(.LCPI32_0)(
@@ -1102,8 +1101,7 @@ entry:
 ; 64-CMP-DAG:    add.s    $[[T0:f[0-9]+]], $f13, $f12
 ; 64-CMP-DAG:    lwc1     $[[T1:f[0-9]+]], %lo(.LCPI32_0)(
 ; 64-CMP-DAG:    cmp.le.s $[[T2:f[0-9]+]], $[[T0]], $[[T1]]
-; 64-CMP-DAG:    mfc1     $[[T3:[0-9]+]], $[[T2]]
-; 64-CMP-DAG:    bnezc    $[[T3]],
+; 64-CMP-DAG:    bc1nez   $[[T2]],
 
 ; MM32R3-DAG:    add.s    $[[T0:f[0-9]+]], $f14, $f12
 ; MM32R3-DAG:    lui      $[[T1:[0-9]+]], %hi($CPI32_0)
@@ -1115,8 +1113,7 @@ entry:
 ; MM32R6-DAG:    lui      $[[T1:[0-9]+]], %hi($CPI32_0)
 ; MM32R6-DAG:    lwc1     $[[T2:f[0-9]+]], %lo($CPI32_0)($[[T1]])
 ; MM32R6-DAG:    cmp.le.s $[[T3:f[0-9]+]], $[[T0]], $[[T2]]
-; MM32R6-DAG:    mfc1     $[[T4:[0-9]+]], $[[T3:f[0-9]+]]
-; MM32R6-DAG:    bnezc    $[[T4]],
+; MM32R6-DAG:    bc1nezc  $[[T3]],
 
   %add = fadd fast float %at, %angle
   %cmp = fcmp ogt float %add, 1.000000e+00
@@ -1144,8 +1141,7 @@ entry:
 ; 32-CMP-DAG:    add.d    $[[T0:f[0-9]+]], $f14, $f12
 ; 32-CMP-DAG:    ldc1     $[[T1:f[0-9]+]], %lo($CPI33_0)(
 ; 32-CMP-DAG:    cmp.le.d $[[T2:f[0-9]+]], $[[T0]], $[[T1]]
-; 32-CMP-DAG:    mfc1     $[[T3:[0-9]+]], $[[T2]]
-; 32-CMP-DAG:    bnezc    $[[T3]],
+; 32-CMP-DAG:    bc1nez   $[[T2]],
 
 ; 64-C-DAG:      add.d    $[[T0:f[0-9]+]], $f13, $f12
 ; 64-C-DAG:      ldc1     $[[T1:f[0-9]+]], %lo(.LCPI33_0)(
@@ -1155,8 +1151,7 @@ entry:
 ; 64-CMP-DAG:    add.d    $[[T0:f[0-9]+]], $f13, $f12
 ; 64-CMP-DAG:    ldc1     $[[T1:f[0-9]+]], %lo(.LCPI33_0)(
 ; 64-CMP-DAG:    cmp.le.d $[[T2:f[0-9]+]], $[[T0]], $[[T1]]
-; 64-CMP-DAG:    mfc1     $[[T3:[0-9]+]], $[[T2]]
-; 64-CMP-DAG:    bnezc    $[[T3]],
+; 64-CMP-DAG:    bc1nez   $[[T2]],
 
 ; MM32R3-DAG:    add.d    $[[T0:f[0-9]+]], $f14, $f12
 ; MM32R3-DAG:    lui      $[[T1:[0-9]+]], %hi($CPI33_0)
@@ -1168,8 +1163,7 @@ entry:
 ; MM32R6-DAG:    lui      $[[T1:[0-9]+]], %hi($CPI33_0)
 ; MM32R6-DAG:    ldc1     $[[T2:f[0-9]+]], %lo($CPI33_0)($[[T1]])
 ; MM32R6-DAG:    cmp.le.d $[[T3:f[0-9]+]], $[[T0]], $[[T2]]
-; MM32R6-DAG:    mfc1     $[[T4:[0-9]+]], $[[T3]]
-; MM32R6-DAG:    bnezc    $[[T4]],
+; MM32R6-DAG:    bc1nezc  $[[T3]],
 
   %add = fadd fast double %at, %angle
   %cmp = fcmp ogt double %add, 1.000000e+00

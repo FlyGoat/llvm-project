@@ -642,6 +642,7 @@ unsigned MipsSEInstrInfo::getAnalyzableBrOpc(unsigned Opc) const {
           Opc == Mips::BGEUC64 || Opc == Mips::BLTC64 || Opc == Mips::BLTUC64 ||
           Opc == Mips::BGTZC64 || Opc == Mips::BGEZC64 ||
           Opc == Mips::BLTZC64 || Opc == Mips::BLEZC64 || Opc == Mips::BC ||
+          Opc == Mips::BC1EQZ || Opc == Mips::BC1NEZ ||
           Opc == Mips::BBIT0 || Opc == Mips::BBIT1 || Opc == Mips::BBIT032 ||
           Opc == Mips::BBIT132 ||  Opc == Mips::BC_MMR6 ||
           Opc == Mips::BEQC_MMR6 || Opc == Mips::BNEC_MMR6 ||
@@ -649,7 +650,8 @@ unsigned MipsSEInstrInfo::getAnalyzableBrOpc(unsigned Opc) const {
           Opc == Mips::BLTUC_MMR6 || Opc == Mips::BGEUC_MMR6 ||
           Opc == Mips::BGTZC_MMR6 || Opc == Mips::BLEZC_MMR6 ||
           Opc == Mips::BGEZC_MMR6 || Opc == Mips::BLTZC_MMR6 ||
-          Opc == Mips::BEQZC_MMR6 || Opc == Mips::BNEZC_MMR6) ? Opc : 0;
+          Opc == Mips::BEQZC_MMR6 || Opc == Mips::BNEZC_MMR6 ||
+          Opc == Mips::BC1EQZC_MMR6 || Opc == Mips::BC1NEZC_MMR6) ? Opc : 0;
 }
 
 void MipsSEInstrInfo::expandRetRA(MachineBasicBlock &MBB,

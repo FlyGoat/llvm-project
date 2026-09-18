@@ -1184,7 +1184,7 @@ class BNEZC_MMR6_DESC
       MMR6Arch<"bnezc">;
 
 class BRANCH_COP1_MMR6_DESC_BASE<string opstr> :
-    InstSE<(outs), (ins FGR64Opnd:$rt, brtarget_mm:$offset),
+    InstSE<(outs), (ins FGR32Opnd:$rt, brtarget_mm:$offset),
            !strconcat(opstr, "\t$rt, $offset"), [], FrmI>,
     HARDFLOAT, BRANCH_DESC_BASE {
   list<Register> Defs = [AT];
@@ -1688,6 +1688,8 @@ defm : SelectInt_Pats<i32, OR_MM, XORI_MMR6, SLTi_MM, SLTiu_MM, SELEQZ_MMR6,
 
 defm S_MMR6 : Cmp_Pats<f32>, ISA_MICROMIPS32R6;
 defm D_MMR6 : Cmp_Pats<f64>, ISA_MICROMIPS32R6;
+
+defm : FPBrcondPats<BC1EQZC_MMR6, BC1NEZC_MMR6>, ISA_MICROMIPS32R6;
 
 def : MipsPat<(brcond (and i32_zero_or_negative_one:$cond, 1), bb:$dst),
               (BNEZC_MMR6 GPR32:$cond, bb:$dst)>, ISA_MICROMIPS32R6;

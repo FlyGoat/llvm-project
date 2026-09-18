@@ -188,14 +188,24 @@ f:
   ret void
 }
 
-; A shared integer use must still normalize the FP mask to 0/1.
+; Share one compare between an FPR branch and an integer use. Only the latter
+; needs to copy and normalize the FP mask to 0/1.
 define void @branch_and_store_boolean(double %a, double %b, ptr %out) {
 ; CHECK-LABEL: branch_and_store_boolean:
-; CHECK: cmp.
-; CHECK: mfc1
+; CHECK: cmp.eq.d $f[[COND:[0-9]+]],
+; CHECK: mfc1 {{.*}}, $f[[COND]]
 ; CHECK: andi{{(16)?}} {{.*}}, 1
-; CHECK: sw
-  %c = fcmp olt double %a, %b
+; CHECK-DAG: bc1eqz{{c?}} $f[[COND]],
+; CHECK-DAG: sw
+;
+; ISEL-LABEL: name: branch_and_store_boolean
+; ISEL: %[[CMP:[0-9]+]]:fgr64 = CMP_EQ_D
+; ISEL-NEXT: %[[CC:[0-9]+]]:gpr32 = COPY %[[CMP]].sub_lo
+; ISEL-NEXT: %[[BOOL:[0-9]+]]:gpr32 = ANDi %[[CC]], 1
+; ISEL: SW killed %[[BOOL]],
+; ISEL: %[[FPCOND:[0-9]+]]:fgr32 = COPY %[[CC]]
+; ISEL-NEXT: BC1EQZ killed %[[FPCOND]],
+  %c = fcmp oeq double %a, %b
   %b32 = zext i1 %c to i32
   store i32 %b32, ptr %out
   br i1 %c, label %t, label %f

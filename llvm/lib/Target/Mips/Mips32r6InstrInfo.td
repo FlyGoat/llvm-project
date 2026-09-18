@@ -432,7 +432,7 @@ class BEQZC_DESC : CMP_CBR_EQNE_Z_DESC_BASE<"beqzc", brtarget21, GPR32Opnd>;
 class BNEZC_DESC : CMP_CBR_EQNE_Z_DESC_BASE<"bnezc", brtarget21, GPR32Opnd>;
 
 class COP1_BCCZ_DESC_BASE<string instr_asm> : BRANCH_DESC_BASE {
-  dag InOperandList = (ins FGR64Opnd:$ft, brtarget:$offset);
+  dag InOperandList = (ins FGR32Opnd:$ft, brtarget:$offset);
   dag OutOperandList = (outs);
   string AsmString = instr_asm;
   bit hasDelaySlot = 1;
@@ -1006,7 +1006,26 @@ def i32_zero_or_negative_one : PatLeaf<(i32 GPR32:$src), [{
   return CurDAG->ComputeNumSignBits(SDValue(N, 0)) == 32;
 }]>;
 
+// Leave the compare as a separate node so branches can share its result with
+// other users. Its i32 result represents the low word of either CMP.S or CMP.D.
+def r6_fp_condition : PatLeaf<(i32 GPR32:$src), [{
+  return N->getOpcode() == ISD::SETCC &&
+         N->getOperand(0).getValueType().isFloatingPoint();
+}]>;
+
+// Both branch forms read only bit zero, so an ordinary FGR32 operand suffices.
+// Prefer them to GPR branches when the condition is already produced in an FPR.
+multiclass FPBrcondPats<Instruction EQZ, Instruction NEZ> {
+  let AddedComplexity = 1 in {
+    def : MipsPat<(brcond (and r6_fp_condition:$cond, 1), bb:$dst),
+                  (NEZ (COPY_TO_REGCLASS i32:$cond, FGR32), bb:$dst)>, HARDFLOAT;
+    def : MipsPat<(brcond (and (not r6_fp_condition:$cond), 1), bb:$dst),
+                  (EQZ (COPY_TO_REGCLASS i32:$cond, FGR32), bb:$dst)>, HARDFLOAT;
+  }
+}
+
 let AdditionalPredicates = [NotInMicroMips] in {
+  defm : FPBrcondPats<BC1EQZ, BC1NEZ>, ISA_MIPS32R6;
   def : MipsPat<(brcond (and i32_zero_or_negative_one:$cond, 1), bb:$dst),
                 (BNE GPR32:$cond, ZERO, bb:$dst)>, ISA_MIPS32R6;
   def : MipsPat<(brcond (and (not i32_zero_or_negative_one:$cond), 1), bb:$dst),
