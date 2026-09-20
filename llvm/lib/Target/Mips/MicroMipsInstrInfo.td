@@ -228,30 +228,27 @@ class StoreLeftRightMM<string opstr, SDNode OpNode, RegisterOperand RO,
   bit mayStore = 1;
 }
 
-class MovePMM16<string opstr, RegisterOperand RO1, RegisterOperand RO2,
-                RegisterOperand RO3> :
-MicroMipsInst16<(outs RO1:$rd1, RO2:$rd2), (ins RO3:$rs, RO3:$rt),
-                 !strconcat(opstr, "\t$rd1, $rd2, $rs, $rt"), [],
-                 FrmR> {
+class MovePMM16<string opstr> :
+  MicroMipsInst16<(outs GPRMM16MovePPairOpnd:$rd),
+                 (ins GPRMM16OpndMoveP:$rs, GPRMM16OpndMoveP:$rt),
+                 !strconcat(opstr, "\t$rd, $rs, $rt"), [], FrmR> {
   let isReMaterializable = 1;
   let isMoveReg = 1;
   let DecoderMethod = "DecodeMovePOperands";
 }
 
 class StorePairMM<string opstr>
-    :  InstSE<(outs), (ins GPR32Opnd:$rt, GPR32Opnd:$rt2, mem_simm12:$addr),
-         !strconcat(opstr, "\t$rt, $addr"), [], FrmI, opstr> {
+    : InstSE<(outs), (ins GPR32PairOpnd:$rt, mem_simm12:$addr),
+             !strconcat(opstr, "\t$rt, $addr"), [], FrmI, opstr> {
   let DecoderMethod = "DecodeMemMMImm12";
   let mayStore = 1;
-  let AsmMatchConverter = "ConvertXWPOperands";
 }
 
 class LoadPairMM<string opstr>
-    : InstSE<(outs GPR32Opnd:$rt, GPR32Opnd:$rt2), (ins mem_simm12:$addr),
-          !strconcat(opstr, "\t$rt, $addr"), [], FrmI, opstr> {
+    : InstSE<(outs GPR32PairOpnd:$rt), (ins mem_simm12:$addr),
+             !strconcat(opstr, "\t$rt, $addr"), [], FrmI, opstr> {
   let DecoderMethod = "DecodeMemMMImm12";
   let mayLoad = 1;
-  let AsmMatchConverter = "ConvertXWPOperands";
 }
 
 class LLBaseMM<string opstr, RegisterOperand RO> :
@@ -503,10 +500,11 @@ class AddImmUPC<string opstr, RegisterOperand RO> :
 /// A list of registers used by load/store multiple instructions.
 def RegListAsmOperand : AsmOperandClass {
   let Name = "RegList";
+  let RenderMethod = "addRegOperands";
   let ParserMethod = "parseRegisterList";
 }
 
-def reglist : Operand<i32> {
+def reglist : RegisterOperand<GPRMMRegList> {
   let EncoderMethod = "getRegisterListOpValue";
   let ParserMatchClass = RegListAsmOperand;
   let PrintMethod = "printRegisterList";
@@ -517,10 +515,10 @@ def RegList16AsmOperand : AsmOperandClass {
   let Name = "RegList16";
   let ParserMethod = "parseRegisterList";
   let PredicateMethod = "isRegList16";
-  let RenderMethod = "addRegListOperands";
+  let RenderMethod = "addRegOperands";
 }
 
-def reglist16 : Operand<i32> {
+def reglist16 : RegisterOperand<GPRMMRegList16> {
   let EncoderMethod = "getRegisterListOpValue16";
   let DecoderMethod = "DecodeRegListOperand16";
   let PrintMethod = "printRegisterList";
@@ -651,8 +649,7 @@ def MFLO16_MM : MoveFromHILOMM<"mflo16", GPR32Opnd, AC0>,
                 MFHILO_FM_MM16<0x12>, ISA_MICROMIPS32_NOT_MIPS32R6;
 def MOVE16_MM : MoveMM16<"move", GPR32Opnd>, MOVE_FM_MM16<0x03>,
                 ISA_MICROMIPS32_NOT_MIPS32R6;
-def MOVEP_MM : MovePMM16<"movep", GPRMM16OpndMovePPairFirst,
-                         GPRMM16OpndMovePPairSecond, GPRMM16OpndMoveP>,
+def MOVEP_MM : MovePMM16<"movep">,
                MOVEP_FM_MM16, ISA_MICROMIPS32_NOT_MIPS32R6;
 def LI16_MM : LoadImmMM16<"li16", li16_imm, GPRMM16Opnd>, LI_FM_MM16,
               IsAsCheapAsAMove, ISA_MICROMIPS32_NOT_MIPS32R6;

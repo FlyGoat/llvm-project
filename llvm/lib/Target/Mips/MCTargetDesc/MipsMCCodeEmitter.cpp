@@ -17,6 +17,7 @@
 #include "MCTargetDesc/MipsMCTargetDesc.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
@@ -214,12 +215,6 @@ void MipsMCCodeEmitter::encodeInstruction(const MCInst &MI,
 
       TmpInst.setOpcode (NewOpcode);
       Binary = getBinaryCodeForInstr(TmpInst, Fixups, STI);
-    }
-
-    if (((MI.getOpcode() == Mips::MOVEP_MM) ||
-         (MI.getOpcode() == Mips::MOVEP_MMR6))) {
-      unsigned RegPair = getMovePRegPairOpValue(MI, 0, Fixups, STI);
-      Binary = (Binary & 0xFFFFFC7F) | (RegPair << 7);
     }
   }
 
@@ -870,17 +865,6 @@ unsigned MipsMCCodeEmitter::
 getMemEncodingMMImm12(const MCInst &MI, unsigned OpNo,
                       SmallVectorImpl<MCFixup> &Fixups,
                       const MCSubtargetInfo &STI) const {
-  // opNum can be invalid if instruction had reglist as operand.
-  // MemOperand is always last operand of instruction (base + offset).
-  switch (MI.getOpcode()) {
-  default:
-    break;
-  case Mips::SWM32_MM:
-  case Mips::LWM32_MM:
-    OpNo = MI.getNumOperands() - 2;
-    break;
-  }
-
   // Base register is encoded in bits 20-16, offset is encoded in bits 11-0.
   assert(MI.getOperand(OpNo).isReg());
   unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI)
@@ -907,19 +891,6 @@ unsigned MipsMCCodeEmitter::
 getMemEncodingMMImm4sp(const MCInst &MI, unsigned OpNo,
                        SmallVectorImpl<MCFixup> &Fixups,
                        const MCSubtargetInfo &STI) const {
-  // opNum can be invalid if instruction had reglist as operand
-  // MemOperand is always last operand of instruction (base + offset)
-  switch (MI.getOpcode()) {
-  default:
-    break;
-  case Mips::SWM16_MM:
-  case Mips::SWM16_MMR6:
-  case Mips::LWM16_MM:
-  case Mips::LWM16_MMR6:
-    OpNo = MI.getNumOperands() - 2;
-    break;
-  }
-
   // Offset is encoded in bits 4-0.
   assert(MI.getOperand(OpNo).isReg());
   // Base register is always SP - thus it is not encoded.
@@ -1039,68 +1010,41 @@ unsigned
 MipsMCCodeEmitter::getRegisterListOpValue(const MCInst &MI, unsigned OpNo,
                                           SmallVectorImpl<MCFixup> &Fixups,
                                           const MCSubtargetInfo &STI) const {
-  unsigned res = 0;
-
-  // Register list operand is always first operand of instruction and it is
-  // placed before memory operand (register + imm).
-
-  for (unsigned I = OpNo, E = MI.getNumOperands() - 2; I < E; ++I) {
-    MCRegister Reg = MI.getOperand(I).getReg();
-    unsigned RegNo = Ctx.getRegisterInfo()->getEncodingValue(Reg);
-    if (RegNo != 31)
-      res++;
-    else
-      res |= 0x10;
-  }
-  return res;
+  const MCRegisterClass &RC =
+      Ctx.getRegisterInfo()->getRegClass(Mips::GPRMMRegListRegClassID);
+  auto I = llvm::find(RC, MI.getOperand(OpNo).getReg());
+  assert(I != RC.end() && "Invalid register list");
+  unsigned Index = I - RC.begin();
+  return Index < 9 ? Index + 1 : Index + 7;
 }
 
 unsigned
 MipsMCCodeEmitter::getRegisterListOpValue16(const MCInst &MI, unsigned OpNo,
                                             SmallVectorImpl<MCFixup> &Fixups,
                                             const MCSubtargetInfo &STI) const {
-  return (MI.getNumOperands() - 4);
+  unsigned Encoding = getRegisterListOpValue(MI, OpNo, Fixups, STI);
+  assert(Encoding >= 17 && Encoding <= 20 && "Invalid 16-bit register list");
+  return Encoding - 17;
 }
 
 unsigned
 MipsMCCodeEmitter::getMovePRegPairOpValue(const MCInst &MI, unsigned OpNo,
                                           SmallVectorImpl<MCFixup> &Fixups,
                                           const MCSubtargetInfo &STI) const {
-  unsigned res = 0;
-
-  if (MI.getOperand(0).getReg() == Mips::A1 &&
-      MI.getOperand(1).getReg() == Mips::A2)
-    res = 0;
-  else if (MI.getOperand(0).getReg() == Mips::A1 &&
-           MI.getOperand(1).getReg() == Mips::A3)
-    res = 1;
-  else if (MI.getOperand(0).getReg() == Mips::A2 &&
-           MI.getOperand(1).getReg() == Mips::A3)
-    res = 2;
-  else if (MI.getOperand(0).getReg() == Mips::A0 &&
-           MI.getOperand(1).getReg() == Mips::S5)
-    res = 3;
-  else if (MI.getOperand(0).getReg() == Mips::A0 &&
-           MI.getOperand(1).getReg() == Mips::S6)
-    res = 4;
-  else if (MI.getOperand(0).getReg() == Mips::A0 &&
-           MI.getOperand(1).getReg() == Mips::A1)
-    res = 5;
-  else if (MI.getOperand(0).getReg() == Mips::A0 &&
-           MI.getOperand(1).getReg() == Mips::A2)
-    res = 6;
-  else if (MI.getOperand(0).getReg() == Mips::A0 &&
-           MI.getOperand(1).getReg() == Mips::A3)
-    res = 7;
-
-  return res;
+  const MCRegisterClass &RC =
+      Ctx.getRegisterInfo()->getRegClass(Mips::GPRMM16MovePPairRegClassID);
+  MCRegister Pair = MI.getOperand(OpNo).getReg();
+  for (unsigned I = 0; I != RC.getNumRegs(); ++I)
+    if (RC.getRegister(I) == Pair)
+      return I;
+  llvm_unreachable("Invalid MOVEP register pair");
 }
 
 unsigned
 MipsMCCodeEmitter::getMovePRegSingleOpValue(const MCInst &MI, unsigned OpNo,
                                             SmallVectorImpl<MCFixup> &Fixups,
                                             const MCSubtargetInfo &STI) const {
-  assert(((OpNo == 2) || (OpNo == 3)) &&
+  assert(((OpNo == 1) || (OpNo == 2)) &&
          "Unexpected OpNo for movep operand encoding!");
 
   MCOperand Op = MI.getOperand(OpNo);

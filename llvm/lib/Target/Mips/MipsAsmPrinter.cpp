@@ -679,17 +679,6 @@ printMemOperand(const MachineInstr *MI, int opNum, raw_ostream &O) {
   // If PIC target the target is loaded as the
   // pattern lw $25,%call16($28)
 
-  // opNum can be invalid if instruction has reglist as operand.
-  // MemOperand is always last operand of instruction (base + offset).
-  switch (MI->getOpcode()) {
-  default:
-    break;
-  case Mips::SWM32_MM:
-  case Mips::LWM32_MM:
-    opNum = MI->getNumOperands() - 2;
-    break;
-  }
-
   printOperand(MI, opNum+1, O);
   O << "(";
   printOperand(MI, opNum, O);

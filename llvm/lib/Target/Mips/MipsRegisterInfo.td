@@ -14,6 +14,9 @@ def sub_32     : SubRegIndex<32>;
 def sub_64     : SubRegIndex<64>;
 def sub_lo     : SubRegIndex<32>;
 def sub_hi     : SubRegIndex<32, 32>;
+// Additional elements of microMIPS load/store multiple register tuples.
+foreach I = 2-9 in
+  def sub_gpr#I : SubRegIndex<32, !mul(I, 32)>;
 def sub_dsp16_19 : SubRegIndex<4, 16>;
 def sub_dsp20    : SubRegIndex<1, 20>;
 def sub_dsp21    : SubRegIndex<1, 21>;
@@ -364,15 +367,71 @@ def GPRMM16MoveP : RegisterClass<"Mips", [i32], 32, (add
   // Callee save
   S0, S2, S3, S4)>;
 
-def GPRMM16MovePPairFirst : RegisterClass<"Mips", [i32], 32, (add
-  // Arguments
-  A0, A1, A2)>;
+// LWP/SWP name the first register of a consecutive pair. MOVEP has
+// eight encodable destination pairs, including three consecutive pairs.
+// Define this pair explicitly so it does not inherit ZERO's isConstant bit.
+def ZERO_AT : MipsRegWithSubRegs<0, "", [ZERO, AT]> {
+  let SubRegIndices = [sub_lo, sub_hi];
+  let CoveredBySubRegs = 1;
+}
+def GPR32PairRegs : RegisterTuples<[sub_lo, sub_hi],
+    [(trunc (shl GPR32, 1), 30), (shl GPR32, 2)]>;
+def GPR32Pair : RegisterClass<"Mips", [untyped], 64, (add ZERO_AT, GPR32PairRegs)>,
+                  Unallocatable {
+  let Size = 64;
+}
 
-def GPRMM16MovePPairSecond : RegisterClass<"Mips", [i32], 32, (add
-  // Arguments
-  A1, A2, A3,
-  // Callee save
-  S5, S6)>;
+def GPRMM16MovePA1A3 : RegisterTuples<[sub_lo, sub_hi],
+                                      [(add A1), (add A3)]>;
+foreach Second = [S5, S6, A2, A3] in
+  def "GPRMM16MovePA0" # Second : RegisterTuples<[sub_lo, sub_hi],
+                                               [(add A0), (add Second)]>;
+// Keep these tuples in MOVEP encoding order for the encoder and decoder.
+def GPRMM16MovePPair : RegisterClass<"Mips", [untyped], 64,
+    (add (trunc (shl GPR32Pair, 5), 1), GPRMM16MovePA1A3,
+         (trunc (shl GPR32Pair, 6), 1),
+         GPRMM16MovePA0S5, GPRMM16MovePA0S6,
+         (trunc (shl GPR32Pair, 4), 1),
+         GPRMM16MovePA0A2, GPRMM16MovePA0A3)>,
+    Unallocatable {
+  let Size = 64;
+}
+
+// LWM/SWM transfer a prefix of S0-S7, FP, optionally followed by RA.
+// Reuse the S0/S1 pair, but wrap singleton lists so this variable-size class
+// cannot change the spill size selected for an ordinary GPR.
+foreach Reg = [S0, RA] in {
+  def Reg#_LWM : MipsRegWithSubRegs<Reg.HWEncoding, "", [Reg]> {
+    let SubRegIndices = [sub_lo];
+    let CoveredBySubRegs = 1;
+  }
+}
+defvar MultipleRegs = [S0, S1, S2, S3, S4, S5, S6, S7, FP];
+defvar MultipleIndices = [sub_lo, sub_hi, sub_gpr2, sub_gpr3, sub_gpr4,
+                         sub_gpr5, sub_gpr6, sub_gpr7, sub_gpr8, sub_gpr9];
+foreach N = 3-9 in
+  def GPRMMRegList#N : RegisterTuples<
+      !foreach(I, !range(N), MultipleIndices[I]),
+      !foreach(I, !range(N), (add MultipleRegs[I]))>;
+foreach N = 1-9 in
+  def GPRMMRegListRA#N : RegisterTuples<
+      !foreach(I, !range(!add(N, 1)), MultipleIndices[I]),
+      !listconcat(!foreach(I, !range(N), (add MultipleRegs[I])), [(add RA)])>;
+
+// These classes contain lists of different lengths and are never allocated.
+// The order is the 32-bit instruction's encodings 1-9, then 16-25.
+def GPRMMRegList : RegisterClass<"Mips", [untyped], 32,
+    (add S0_LWM, (trunc (shl GPR32Pair, 16), 1),
+         (sequence "GPRMMRegList%u", 3, 9), RA_LWM,
+         (sequence "GPRMMRegListRA%u", 1, 9))>, Unallocatable {
+  let Size = 320;
+}
+
+// The 16-bit forms transfer S0 through S0-S3, followed by RA.
+def GPRMMRegList16 : RegisterClass<"Mips", [untyped], 32,
+    (sequence "GPRMMRegListRA%u", 1, 4)>, Unallocatable {
+  let Size = 160;
+}
 
 def GPR64 : RegisterClass<"Mips", [i64], 64, (add
   // Reserved
@@ -563,14 +622,17 @@ def GPRMM16AsmOperandMoveP : MipsAsmRegOperand {
   let PredicateMethod = "isMM16AsmRegMoveP";
 }
 
-def GPRMM16AsmOperandMovePPairFirst : MipsAsmRegOperand {
-  let Name = "GPRMM16AsmRegMovePPairFirst";
-  let PredicateMethod = "isMM16AsmRegMovePPairFirst";
+def GPR32PairAsmOperand : MipsAsmRegOperand {
+  let Name = "GPR32PairAsmReg";
+  let RenderMethod = "addGPR32PairOperands";
+  let PredicateMethod = "isGPR32Pair";
 }
 
-def GPRMM16AsmOperandMovePPairSecond : MipsAsmRegOperand {
-  let Name = "GPRMM16AsmRegMovePPairSecond";
-  let PredicateMethod = "isMM16AsmRegMovePPairSecond";
+def GPRMM16MovePPairAsmOperand : AsmOperandClass {
+  let Name = "GPRMM16MovePPairAsmReg";
+  let PredicateMethod = "isGPRMM16MovePPair";
+  let ParserMethod = "parseMovePRegisterPair";
+  let RenderMethod = "addRegOperands";
 }
 
 def ACC64DSPAsmOperand : MipsAsmRegOperand {
@@ -659,12 +721,15 @@ def GPRMM16OpndMoveP : RegisterOperand<GPRMM16MoveP> {
   let EncoderMethod = "getMovePRegSingleOpValue";
 }
 
-def GPRMM16OpndMovePPairFirst : RegisterOperand<GPRMM16MovePPairFirst> {
-  let ParserMatchClass = GPRMM16AsmOperandMovePPairFirst;
+def GPR32PairOpnd : RegisterOperand<GPR32Pair> {
+  let ParserMatchClass = GPR32PairAsmOperand;
+  let PrintMethod = "printRegisterPairFirst";
 }
 
-def GPRMM16OpndMovePPairSecond : RegisterOperand<GPRMM16MovePPairSecond> {
-  let ParserMatchClass = GPRMM16AsmOperandMovePPairSecond;
+def GPRMM16MovePPairOpnd : RegisterOperand<GPRMM16MovePPair> {
+  let ParserMatchClass = GPRMM16MovePPairAsmOperand;
+  let PrintMethod = "printRegisterPair";
+  let EncoderMethod = "getMovePRegPairOpValue";
 }
 
 def GPR64Opnd : RegisterOperand<GPR64> {

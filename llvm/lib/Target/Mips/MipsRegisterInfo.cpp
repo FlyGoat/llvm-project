@@ -172,30 +172,22 @@ getReservedRegs(const MachineFunction &MF) const {
     Mips::ZERO, Mips::K0, Mips::K1, Mips::SP
   };
 
-  static const MCPhysReg ReservedGPR64[] = {
-    Mips::ZERO_64, Mips::K0_64, Mips::K1_64, Mips::SP_64
-  };
-
   BitVector Reserved(getNumRegs());
   const MipsSubtarget &Subtarget = MF.getSubtarget<MipsSubtarget>();
 
+  // Include each reserved GPR's 64-bit super-register and containing tuples.
   for (MCPhysReg R : ReservedGPR32)
-    Reserved.set(R);
+    markSuperRegs(Reserved, R);
 
-  for (MCPhysReg R : ReservedGPR64)
-    Reserved.set(R);
-
-  // Mark user-reserved GPRs and their 64-bit super-registers.
+  // Mark user-reserved GPRs and their super-registers.
   for (unsigned I = 1; I < 32; ++I)
     if (Subtarget.isGPRReservedByUser(I))
       markSuperRegs(Reserved, Mips::GPR32RegClass.getRegister(I));
 
   // For mno-abicalls, GP is a program invariant!
   bool GPIsGlobal = isGPUsedAsGlobalRegister(MF);
-  if (!Subtarget.isABICalls() || GPIsGlobal) {
-    Reserved.set(Mips::GP);
-    Reserved.set(Mips::GP_64);
-  }
+  if (!Subtarget.isABICalls() || GPIsGlobal)
+    markSuperRegs(Reserved, Mips::GP);
 
   if (Subtarget.isFP64bit()) {
     // Reserve all registers in AFGR64.
@@ -209,18 +201,15 @@ getReservedRegs(const MachineFunction &MF) const {
   // Reserve FP if this function should have a dedicated frame pointer register.
   if (Subtarget.getFrameLowering()->hasFP(MF)) {
     if (Subtarget.inMips16Mode())
-      Reserved.set(Mips::S0);
+      markSuperRegs(Reserved, Mips::S0);
     else {
-      Reserved.set(Mips::FP);
-      Reserved.set(Mips::FP_64);
+      markSuperRegs(Reserved, Mips::FP);
 
       // Reserve the base register if we need to both realign the stack and
       // allocate variable-sized objects at runtime. This should test the
       // same conditions as MipsFrameLowering::hasBP().
-      if (hasStackRealignment(MF) && MF.getFrameInfo().hasVarSizedObjects()) {
-        Reserved.set(Mips::S7);
-        Reserved.set(Mips::S7_64);
-      }
+      if (hasStackRealignment(MF) && MF.getFrameInfo().hasVarSizedObjects())
+        markSuperRegs(Reserved, Mips::S7);
     }
   }
   // Reserve fp control and status register
@@ -244,19 +233,16 @@ getReservedRegs(const MachineFunction &MF) const {
   // Reserve RA if in mips16 mode.
   if (Subtarget.inMips16Mode()) {
     const MipsFunctionInfo *MipsFI = MF.getInfo<MipsFunctionInfo>();
-    Reserved.set(Mips::RA);
-    Reserved.set(Mips::RA_64);
-    Reserved.set(Mips::T0);
-    Reserved.set(Mips::T1);
+    markSuperRegs(Reserved, Mips::RA);
+    markSuperRegs(Reserved, Mips::T0);
+    markSuperRegs(Reserved, Mips::T1);
     if (MF.getFunction().hasFnAttribute("saveS2") || MipsFI->hasSaveS2())
-      Reserved.set(Mips::S2);
+      markSuperRegs(Reserved, Mips::S2);
   }
 
   // Reserve GP if small section is used.
-  if (Subtarget.useSmallSection()) {
-    Reserved.set(Mips::GP);
-    Reserved.set(Mips::GP_64);
-  }
+  if (Subtarget.useSmallSection())
+    markSuperRegs(Reserved, Mips::GP);
 
   return Reserved;
 }

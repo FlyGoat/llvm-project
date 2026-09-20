@@ -98,6 +98,10 @@ public:
                                const MCSubtargetInfo &STI, raw_ostream &O);
 
 private:
+  void printRegisterPairFirst(const MCInst *MI, unsigned OpNo,
+                              const MCSubtargetInfo &STI, raw_ostream &O);
+  void printRegisterPair(const MCInst *MI, unsigned OpNo,
+                         const MCSubtargetInfo &STI, raw_ostream &O);
   void printOperand(const MCInst *MI, unsigned OpNo, const MCSubtargetInfo &STI,
                     raw_ostream &O);
   void printJumpOperand(const MCInst *MI, unsigned OpNo,

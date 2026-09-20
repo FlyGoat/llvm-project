@@ -46,6 +46,7 @@ FunctionPass *createMipsOptimizePICCallPass();
 FunctionPass *createMipsDelaySlotFillerPass();
 FunctionPass *createMipsBranchExpansion();
 FunctionPass *createMipsConstantIslandPass();
+FunctionPass *createMipsLoadStoreOptimizerPass();
 FunctionPass *createMicroMipsSizeReducePass();
 FunctionPass *createMipsExpandPseudoPass();
 FunctionPass *createMipsPreLegalizeCombiner();
@@ -57,6 +58,7 @@ InstructionSelector *
 createMipsInstructionSelector(const MipsTargetMachine &, const MipsSubtarget &,
                               const MipsRegisterBankInfo &);
 
+void initializeMipsLoadStoreOptimizerPass(PassRegistry &);
 void initializeMicroMipsSizeReducePass(PassRegistry &);
 void initializeMipsAsmPrinterPass(PassRegistry &);
 void initializeMipsBranchExpansionPass(PassRegistry &);

@@ -58,6 +58,14 @@ createMipsELFObjectWriter(const Triple &TT, bool IsN32);
 std::unique_ptr<MCObjectTargetWriter> createMipsWinCOFFObjectWriter();
 
 namespace MIPS_MC {
+/// Map a 32-bit LWM/SWM register-list encoding to its register or tuple.
+/// Return an invalid register for reserved encodings.
+MCRegister getRegisterList(unsigned Encoding, const MCRegisterInfo &MRI);
+
+/// Return the tuple containing First and Second in the given register class.
+MCRegister getRegisterPair(MCRegister First, MCRegister Second,
+                           const MCRegisterInfo &MRI, unsigned RegClassID);
+
 void initLLVMToCVRegMapping(MCRegisterInfo *MRI);
 
 StringRef selectMipsCPU(const Triple &TT, StringRef CPU);

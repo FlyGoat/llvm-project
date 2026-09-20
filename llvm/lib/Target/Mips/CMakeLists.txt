@@ -45,6 +45,7 @@ add_llvm_target(MipsCodeGen
   MipsISelLowering.cpp
   MipsFrameLowering.cpp
   MipsLegalizerInfo.cpp
+  MipsLoadStoreOptimizer.cpp
   MipsBranchExpansion.cpp
   MipsMCInstLower.cpp
   MipsMachineFunction.cpp

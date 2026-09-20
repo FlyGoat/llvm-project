@@ -12,11 +12,13 @@
 
 #include "MipsInstPrinter.h"
 #include "Mips.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
+#include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -125,6 +127,20 @@ void MipsInstPrinter::printInst(const MCInst *MI, uint64_t Address,
   }
 }
 
+void MipsInstPrinter::printRegisterPairFirst(const MCInst *MI, unsigned OpNo,
+                                             const MCSubtargetInfo &STI,
+                                             raw_ostream &O) {
+  printRegName(O, MRI.getSubReg(MI->getOperand(OpNo).getReg(), Mips::sub_lo));
+}
+
+void MipsInstPrinter::printRegisterPair(const MCInst *MI, unsigned OpNo,
+                                        const MCSubtargetInfo &STI,
+                                        raw_ostream &O) {
+  printRegisterPairFirst(MI, OpNo, STI, O);
+  O << ", ";
+  printRegName(O, MRI.getSubReg(MI->getOperand(OpNo).getReg(), Mips::sub_hi));
+}
+
 void MipsInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
                                    const MCSubtargetInfo &STI, raw_ostream &O) {
   const MCOperand &Op = MI->getOperand(OpNo);
@@ -197,21 +213,6 @@ void MipsInstPrinter::printMemOperand(const MCInst *MI, int opNum,
   // Load/Store memory operands -- imm($reg)
   // If PIC target the target is loaded as the
   // pattern lw $25,%call16($28)
-
-  // opNum can be invalid if instruction had reglist as operand.
-  // MemOperand is always last operand of instruction (base + offset).
-  switch (MI->getOpcode()) {
-  default:
-    break;
-  case Mips::SWM32_MM:
-  case Mips::LWM32_MM:
-  case Mips::SWM16_MM:
-  case Mips::SWM16_MMR6:
-  case Mips::LWM16_MM:
-  case Mips::LWM16_MMR6:
-    opNum = MI->getNumOperands() - 2;
-    break;
-  }
 
   WithMarkup M = markup(O, Markup::Memory);
   printOperand(MI, opNum + 1, STI, O);
@@ -353,11 +354,10 @@ void MipsInstPrinter::printSaveRestore(const MCInst *MI,
 void MipsInstPrinter::printRegisterList(const MCInst *MI, int opNum,
                                         const MCSubtargetInfo & /* STI */,
                                         raw_ostream &O) {
-  // - 2 because register List is always first operand of instruction and it is
-  // always followed by memory operand (base + offset).
-  for (int i = opNum, e = MI->getNumOperands() - 2; i != e; ++i) {
-    if (i != opNum)
-      O << ", ";
-    printRegName(O, MI->getOperand(i).getReg());
-  }
+  // TableGen can infer composite subregisters in addition to the GPR members.
+  const MCRegisterClass &GPRs = MRI.getRegClass(Mips::GPR32RegClassID);
+  auto Regs = llvm::make_filter_range(
+      MRI.subregs(MI->getOperand(opNum).getReg()),
+      [&](MCRegister Reg) { return GPRs.contains(Reg); });
+  llvm::interleaveComma(Regs, O, [&](MCRegister Reg) { printRegName(O, Reg); });
 }

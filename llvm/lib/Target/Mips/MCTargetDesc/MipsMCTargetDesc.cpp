@@ -116,6 +116,28 @@ int MIPS_MC::getCPURegisterIndex(StringRef Name, const MCRegisterInfo &MRI,
   return -1;
 }
 
+MCRegister MIPS_MC::getRegisterList(unsigned Encoding,
+                                    const MCRegisterInfo &MRI) {
+  if (Encoding >= 1 && Encoding <= 9)
+    return MRI.getRegClass(Mips::GPRMMRegListRegClassID)
+        .getRegister(Encoding - 1);
+  if (Encoding >= 16 && Encoding <= 25)
+    return MRI.getRegClass(Mips::GPRMMRegListRegClassID)
+        .getRegister(Encoding - 7);
+  return MCRegister();
+}
+
+MCRegister MIPS_MC::getRegisterPair(MCRegister First, MCRegister Second,
+                                    const MCRegisterInfo &MRI,
+                                    unsigned RegClassID) {
+  const MCRegisterClass &RC = MRI.getRegClass(RegClassID);
+  for (MCRegister Pair : MRI.superregs(First))
+    if (RC.contains(Pair) && MRI.getSubReg(Pair, Mips::sub_lo) == First &&
+        MRI.getSubReg(Pair, Mips::sub_hi) == Second)
+      return Pair;
+  return MCRegister();
+}
+
 void MIPS_MC::initLLVMToCVRegMapping(MCRegisterInfo *MRI) {
   // Mapping from CodeView to MC register id.
   static const struct {

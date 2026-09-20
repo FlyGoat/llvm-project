@@ -268,15 +268,14 @@ class B16_FM {
 }
 
 class MOVEP_FM_MM16 {
+  bits<3> rd;
   bits<3> rt;
   bits<3> rs;
 
   bits<16> Inst;
 
   let Inst{15-10} = 0x21;
-  // bits 7-9 are populated by MipsMCCodeEmitter::encodeInstruction, with a
-  // special encoding of both rd1 and rd2.
-  let Inst{9-7}   = ?;
+  let Inst{9-7}   = rd;
   let Inst{6-4}   = rt;
   let Inst{3-1}   = rs;
   let Inst{0}     = 0;

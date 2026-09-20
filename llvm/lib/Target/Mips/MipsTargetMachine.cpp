@@ -64,6 +64,7 @@ extern "C" LLVM_ABI LLVM_EXTERNAL_VISIBILITY void LLVMInitializeMipsTarget() {
   initializeMipsAsmPrinterPass(*PR);
   initializeMipsDelaySlotFillerPass(*PR);
   initializeMipsBranchExpansionPass(*PR);
+  initializeMipsLoadStoreOptimizerPass(*PR);
   initializeMicroMipsSizeReducePass(*PR);
   initializeMipsPreLegalizerCombinerPass(*PR);
   initializeMipsPostLegalizerCombinerPass(*PR);
@@ -276,6 +277,9 @@ MachineFunctionInfo *MipsTargetMachine::createMachineFunctionInfo(
 void MipsPassConfig::addPreEmitPass() {
   // Expand pseudo instructions that are sensitive to register allocation.
   addPass(createMipsExpandPseudoPass());
+
+  // Form load/store pairs and lists before narrowing individual accesses.
+  addPass(createMipsLoadStoreOptimizerPass());
 
   // The microMIPS size reduction pass performs instruction reselection for
   // instructions which can be remapped to a 16 bit instruction.

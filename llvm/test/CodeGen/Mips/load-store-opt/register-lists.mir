@@ -1,0 +1,223 @@
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,R2
+# RUN: llc -mtriple=mips -mcpu=mips32r2 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,R2
+# RUN: llc -mtriple=mipsel -mcpu=mips32r6 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,R6
+# RUN: llc -mtriple=mips -mcpu=mips32r6 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,R6
+
+# Match reversed stores and forward loads; the immediate describes the first word.
+---
+name: compact_max_offset
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $s2, $s3, $ra
+    ; CHECK-LABEL: name: compact_max_offset
+    ; R2: SWM16_MM killed $s0_s1_s2_s3_ra, $sp, 60
+    ; R2-NEXT: dead $s0_s1_s2_s3_ra = LWM16_MM $sp, 60
+    ; R6: SWM16_MMR6 killed $s0_s1_s2_s3_ra, $sp, 60
+    ; R6-NEXT: dead $s0_s1_s2_s3_ra = LWM16_MMR6 $sp, 60
+    SW killed $ra, $sp, 76 :: (store (s32))
+    SW killed $s3, $sp, 72 :: (store (s32))
+    SW killed $s2, $sp, 68 :: (store (s32))
+    SW killed $s1, $sp, 64 :: (store (s32))
+    SW killed $s0, $sp, 60 :: (store (s32))
+    dead $s0 = LW $sp, 60 :: (load (s32))
+    dead $s1 = LW $sp, 64 :: (load (s32))
+    dead $s2 = LW $sp, 68 :: (load (s32))
+    dead $s3 = LW $sp, 72 :: (load (s32))
+    dead $ra = LW $sp, 76 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+# Preserve frame flags and select the full ten-register tuple.
+---
+name: full_list
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $s2, $s3, $s4, $s5, $s6, $s7, $fp, $ra, $a0
+    ; CHECK-LABEL: name: full_list
+    ; CHECK: frame-setup SWM32_MM killed $s0_s1_s2_s3_s4_s5_s6_s7_fp_ra, $a0, -2048
+    ; CHECK-NEXT: dead $s0_s1_s2_s3_s4_s5_s6_s7_fp_ra = frame-destroy LWM32_MM $a0, -2048
+    frame-setup SW killed $ra, $a0, -2012 :: (store (s32))
+    frame-setup SW killed $fp, $a0, -2016 :: (store (s32))
+    frame-setup SW killed $s7, $a0, -2020 :: (store (s32))
+    frame-setup SW killed $s6, $a0, -2024 :: (store (s32))
+    frame-setup SW killed $s5, $a0, -2028 :: (store (s32))
+    frame-setup SW killed $s4, $a0, -2032 :: (store (s32))
+    frame-setup SW killed $s3, $a0, -2036 :: (store (s32))
+    frame-setup SW killed $s2, $a0, -2040 :: (store (s32))
+    frame-setup SW killed $s1, $a0, -2044 :: (store (s32))
+    frame-setup SW killed $s0, $a0, -2048 :: (store (s32))
+    dead $s0 = frame-destroy LW $a0, -2048 :: (load (s32))
+    dead $s1 = frame-destroy LW $a0, -2044 :: (load (s32))
+    dead $s2 = frame-destroy LW $a0, -2040 :: (load (s32))
+    dead $s3 = frame-destroy LW $a0, -2036 :: (load (s32))
+    dead $s4 = frame-destroy LW $a0, -2032 :: (load (s32))
+    dead $s5 = frame-destroy LW $a0, -2028 :: (load (s32))
+    dead $s6 = frame-destroy LW $a0, -2024 :: (load (s32))
+    dead $s7 = frame-destroy LW $a0, -2020 :: (load (s32))
+    dead $fp = frame-destroy LW $a0, -2016 :: (load (s32))
+    dead $ra = frame-destroy LW $a0, -2012 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: wide_offset
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $ra
+    ; CHECK-LABEL: name: wide_offset
+    ; CHECK: SWM32_MM killed $s0_s1_ra, $sp, 64
+    ; CHECK-NEXT: dead $s0_s1_ra = LWM32_MM $sp, 64
+    SW killed $s0, $sp, 64 :: (store (s32))
+    SW killed $s1, $sp, 68 :: (store (s32))
+    SW killed $ra, $sp, 72 :: (store (s32))
+    dead $ra = LW $sp, 72 :: (load (s32))
+    dead $s1 = LW $sp, 68 :: (load (s32))
+    dead $s0 = LW $sp, 64 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: wide_base
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $ra, $a0
+    ; CHECK-LABEL: name: wide_base
+    ; CHECK: SWM32_MM killed $s0_s1_ra, $a0, 0
+    ; CHECK-NEXT: dead $s0_s1_ra = LWM32_MM $a0, 0
+    SW killed $s0, $a0, 0 :: (store (s32))
+    SW killed $s1, $a0, 4 :: (store (s32))
+    SW killed $ra, $a0, 8 :: (store (s32))
+    dead $ra = LW $a0, 8 :: (load (s32))
+    dead $s1 = LW $a0, 4 :: (load (s32))
+    dead $s0 = LW $a0, 0 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: wide_max_offset
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $ra, $a0
+    ; CHECK-LABEL: name: wide_max_offset
+    ; CHECK: SWM32_MM killed $s0_s1_ra, $a0, 2047
+    ; CHECK-NEXT: dead $s0_s1_ra = LWM32_MM $a0, 2047
+    SW killed $s0, $a0, 2047 :: (store (s32))
+    SW killed $s1, $a0, 2051 :: (store (s32))
+    SW killed $ra, $a0, 2055 :: (store (s32))
+    dead $ra = LW $a0, 2055 :: (load (s32))
+    dead $s1 = LW $a0, 2051 :: (load (s32))
+    dead $s0 = LW $a0, 2047 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: prefix_without_ra
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $s2, $a0
+    ; CHECK-LABEL: name: prefix_without_ra
+    ; CHECK: SWM32_MM killed $s0_s1_s2, $a0, 0
+    ; CHECK-NEXT: dead $s0_s1_s2 = LWM32_MM $a0, 0
+    SW killed $s0, $a0, 0 :: (store (s32))
+    SW killed $s1, $a0, 4 :: (store (s32))
+    SW killed $s2, $a0, 8 :: (store (s32))
+    dead $s0 = LW $a0, 0 :: (load (s32))
+    dead $s1 = LW $a0, 4 :: (load (s32))
+    dead $s2 = LW $a0, 8 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+# Keep pairs where available; R6 can use a register list for the same accesses.
+---
+name: two_saved_regs
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1
+    ; CHECK-LABEL: name: two_saved_regs
+    ; R2: SWP_MM killed $s0_s1, $sp, 0
+    ; R2-NEXT: dead $s0_s1 = LWP_MM $sp, 0
+    ; R6: SWM32_MM killed $s0_s1, $sp, 0
+    ; R6-NEXT: dead $s0_s1 = LWM32_MM $sp, 0
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $s1, $sp, 4 :: (store (s32))
+    dead $s0 = LW $sp, 0 :: (load (s32))
+    dead $s1 = LW $sp, 4 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+# R6 has no pair instruction. Base liveness comes from the last original access.
+---
+name: pair_and_base_kill
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $a0, $a1, $t0
+    ; CHECK-LABEL: name: pair_and_base_kill
+    ; R2: SWP_MM killed $a0_a1, killed $t0, 0
+    ; R6: SW killed $a1, $t0, 4
+    ; R6-NEXT: SW killed $a0, killed $t0, 0
+    SW killed $a1, $t0, 4 :: (store (s32))
+    SW killed $a0, killed $t0, 0 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: partial_undef_list
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: partial_undef_list
+    ; R2: SWM16_MM undef $s0_s1_ra, $sp, 0, implicit killed $s0, implicit killed $ra
+    ; R6: SWM16_MMR6 undef $s0_s1_ra, $sp, 0, implicit killed $s0, implicit killed $ra
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW undef $s1, $sp, 4 :: (store (s32))
+    SW killed $ra, $sp, 8 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: partially_live_list
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s1, $ra, $a0
+    ; CHECK-LABEL: name: partially_live_list
+    ; CHECK: SWM32_MM $s0_s1_ra, $a0, 0
+    ; CHECK-NEXT: $v0 = COPY $s1
+    ; CHECK-NEXT: $s0_s1_ra = LWM32_MM $a0, 0
+    ; CHECK-NEXT: $v0 = COPY $s1
+    SW killed $s0, $a0, 0 :: (store (s32))
+    SW $s1, $a0, 4 :: (store (s32))
+    SW killed $ra, $a0, 8 :: (store (s32))
+    $v0 = COPY $s1
+    dead $s0 = LW $a0, 0 :: (load (s32))
+    $s1 = LW $a0, 4 :: (load (s32))
+    dead $ra = LW $a0, 8 :: (load (s32))
+    $v0 = COPY $s1
+    PseudoReturn undef $ra
+...
+
+# An unencodable third access must not hide the compact two-register list.
+---
+name: prefix_of_longer_run
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra, $s5
+    ; CHECK-LABEL: name: prefix_of_longer_run
+    ; R2: SWM16_MM killed $s0_ra, $sp, 0
+    ; R6: SWM16_MMR6 killed $s0_ra, $sp, 0
+    ; CHECK-NEXT: SW killed $s5, $sp, 8
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    SW killed $s5, $sp, 8 :: (store (s32))
+    PseudoReturn undef $ra
+...

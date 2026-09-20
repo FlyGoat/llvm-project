@@ -2,14 +2,16 @@
 ; RUN: llc -mtriple=mipsel-unknown-linux-gnu -mattr=+micromips -mcpu=mips32r2 \
 ; RUN: -verify-machineinstrs < %s | FileCheck %s
 
+; RUN: llc -mtriple=mipsel-unknown-linux-gnu -mattr=+micromips -mcpu=mips32r6 \
+; RUN: -verify-machineinstrs < %s | FileCheck %s --check-prefix=R6
+
 ; Function Attrs: nounwind
 define i32 @fun(ptr %adr, i32 %val) {
 ; CHECK-LABEL: fun:
 ; CHECK:       # %bb.0: # %entry
 ; CHECK-NEXT:    addiusp -32
 ; CHECK-NEXT:    .cfi_def_cfa_offset 32
-; CHECK-NEXT:    sw $ra, 28($sp) # 4-byte Folded Spill
-; CHECK-NEXT:    swp $16, 20($sp)
+; CHECK-NEXT:    swm16 $16, $17, $ra, 20($sp) # 12-byte Folded Spill
 ; CHECK-NEXT:    .cfi_offset 31, -4
 ; CHECK-NEXT:    .cfi_offset 17, -8
 ; CHECK-NEXT:    .cfi_offset 16, -12
@@ -19,10 +21,26 @@ define i32 @fun(ptr %adr, i32 %val) {
 ; CHECK-NEXT:    nop
 ; CHECK-NEXT:    sw16 $17, 0($16)
 ; CHECK-NEXT:    li16 $2, 0
-; CHECK-NEXT:    lwp $16, 20($sp)
-; CHECK-NEXT:    lw $ra, 28($sp) # 4-byte Folded Reload
+; CHECK-NEXT:    lwm16 $16, $17, $ra, 20($sp) # 12-byte Folded Reload
 ; CHECK-NEXT:    addiusp 32
 ; CHECK-NEXT:    jrc $ra
+;
+; R6-LABEL: fun:
+; R6:       # %bb.0: # %entry
+; R6-NEXT:    addiu $sp, $sp, -32
+; R6-NEXT:    .cfi_def_cfa_offset 32
+; R6-NEXT:    swm16 $16, $17, $ra, 20($sp) # 12-byte Folded Spill
+; R6-NEXT:    .cfi_offset 31, -4
+; R6-NEXT:    .cfi_offset 17, -8
+; R6-NEXT:    .cfi_offset 16, -12
+; R6-NEXT:    move $17, $5
+; R6-NEXT:    move $16, $4
+; R6-NEXT:    balc fun1
+; R6-NEXT:    sw16 $17, 0($16)
+; R6-NEXT:    li16 $2, 0
+; R6-NEXT:    lwm16 $16, $17, $ra, 20($sp) # 12-byte Folded Reload
+; R6-NEXT:    addiu $sp, $sp, 32
+; R6-NEXT:    jrc $ra
 entry:
   %call1 =  call ptr @fun1()
   store i32 %val, ptr %adr, align 4

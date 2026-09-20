@@ -1,0 +1,273 @@
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s
+# RUN: llc -mtriple=mips -mcpu=mips32r2 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s
+# RUN: llc -mtriple=mipsel -mcpu=mips32r6 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s
+# RUN: llc -mtriple=mips -mcpu=mips32r6 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s
+
+---
+name: volatile
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: volatile
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (volatile store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: atomic
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: atomic
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store monotonic (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: unaligned
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: unaligned
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32), align 1)
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: unknown_memory
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: unknown_memory
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0
+    SW killed $ra, $sp, 4
+    PseudoReturn undef $ra
+...
+
+---
+name: offset_gap
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: offset_gap
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 8
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 8 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: offset_overlap
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: offset_overlap
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 0
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 0 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: register_gap
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $s2
+    ; CHECK-LABEL: name: register_gap
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $s2, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $s2, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: fp_without_prefix
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $fp
+    ; CHECK-LABEL: name: fp_without_prefix
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $fp, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $fp, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: register_order
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: register_order
+    ; CHECK: SW killed $ra, $sp, 0
+    ; CHECK-NEXT: SW killed $s0, $sp, 4
+    SW killed $ra, $sp, 0 :: (store (s32))
+    SW killed $s0, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: different_base
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra, $a0, $a1
+    ; CHECK-LABEL: name: different_base
+    ; CHECK: SW killed $s0, $a0, 0
+    ; CHECK-NEXT: SW killed $ra, $a1, 4
+    SW killed $s0, $a0, 0 :: (store (s32))
+    SW killed $ra, $a1, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: base_overlap
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0
+    ; CHECK-LABEL: name: base_overlap
+    ; CHECK: $s0 = LW $s0, 0
+    ; CHECK-NEXT: dead $ra = LW $s0, 4
+    $s0 = LW $s0, 0 :: (load (s32))
+    dead $ra = LW $s0, 4 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: duplicate_destination
+tracksRegLiveness: true
+body: |
+  bb.0:
+    ; CHECK-LABEL: name: duplicate_destination
+    ; CHECK: $s0 = LW $sp, 0
+    ; CHECK-NEXT: dead $s0 = LW $sp, 4
+    $s0 = LW $sp, 0 :: (load (s32))
+    dead $s0 = LW $sp, 4 :: (load (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: offset_too_large
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: offset_too_large
+    ; CHECK: SW killed $s0, $sp, 2048
+    ; CHECK-NEXT: SW killed $ra, $sp, 2052
+    SW killed $s0, $sp, 2048 :: (store (s32))
+    SW killed $ra, $sp, 2052 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: offset_too_small
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: offset_too_small
+    ; CHECK: SW killed $s0, $sp, -2052
+    ; CHECK-NEXT: SW killed $ra, $sp, -2048
+    SW killed $s0, $sp, -2052 :: (store (s32))
+    SW killed $ra, $sp, -2048 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: instruction_barrier
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: instruction_barrier
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SYNC 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SYNC 0
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: cfi_barrier
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: cfi_barrier
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: CFI_INSTRUCTION def_cfa_offset 16
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    CFI_INSTRUCTION def_cfa_offset 16
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: different_frame_flags
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: different_frame_flags
+    ; CHECK: frame-setup SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    frame-setup SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: implicit_operand
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra, $a0
+    ; CHECK-LABEL: name: implicit_operand
+    ; CHECK: SW killed $s0, $sp, 0, implicit $a0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0, implicit $a0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+
+---
+name: undef_base
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: undef_base
+    ; CHECK: SW killed $s0, undef $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, undef $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...

@@ -241,27 +241,12 @@ static DecodeStatus DecodeCOP2RegisterClass(MCInst &Inst, unsigned RegNo,
 static DecodeStatus DecodeRegListOperand(MCInst &Inst, unsigned Insn,
                                          uint64_t Address,
                                          const MCDisassembler *Decoder) {
-  unsigned Regs[] = {Mips::S0, Mips::S1, Mips::S2, Mips::S3, Mips::S4,
-                     Mips::S5, Mips::S6, Mips::S7, Mips::FP};
-  unsigned RegNum;
-
-  unsigned RegLst = fieldFromInstruction(Insn, 21, 5);
-
-  // Empty register lists are not allowed.
-  if (RegLst == 0)
+  unsigned Encoding = fieldFromInstruction(Insn, 21, 5);
+  MCRegister Reg = MIPS_MC::getRegisterList(
+      Encoding, *Decoder->getContext().getRegisterInfo());
+  if (!Reg)
     return MCDisassembler::Fail;
-
-  RegNum = RegLst & 0xf;
-
-  // RegLst values 10-15, and 26-31 are reserved.
-  if (RegNum > 9)
-    return MCDisassembler::Fail;
-
-  for (unsigned i = 0; i < RegNum; i++)
-    Inst.addOperand(MCOperand::createReg(Regs[i]));
-
-  if (RegLst & 0x10)
-    Inst.addOperand(MCOperand::createReg(Mips::RA));
+  Inst.addOperand(MCOperand::createReg(Reg));
 
   return MCDisassembler::Success;
 }
@@ -269,7 +254,6 @@ static DecodeStatus DecodeRegListOperand(MCInst &Inst, unsigned Insn,
 static DecodeStatus DecodeRegListOperand16(MCInst &Inst, unsigned Insn,
                                            uint64_t Address,
                                            const MCDisassembler *Decoder) {
-  unsigned Regs[] = {Mips::S0, Mips::S1, Mips::S2, Mips::S3};
   unsigned RegLst;
   switch (Inst.getOpcode()) {
   default:
@@ -280,12 +264,8 @@ static DecodeStatus DecodeRegListOperand16(MCInst &Inst, unsigned Insn,
     RegLst = fieldFromInstruction(Insn, 8, 2);
     break;
   }
-  unsigned RegNum = RegLst & 0x3;
-
-  for (unsigned i = 0; i <= RegNum; i++)
-    Inst.addOperand(MCOperand::createReg(Regs[i]));
-
-  Inst.addOperand(MCOperand::createReg(Mips::RA));
+  Inst.addOperand(MCOperand::createReg(
+      getReg(Decoder, Mips::GPRMMRegList16RegClassID, RegLst)));
 
   return MCDisassembler::Success;
 }
@@ -1320,7 +1300,7 @@ static DecodeStatus DecodeMemMMReglistImm4Lsl2(MCInst &Inst, unsigned Insn,
     Offset = fieldFromInstruction(Insn, 4, 4);
     break;
   default:
-    Offset = SignExtend32<4>(Insn & 0xf);
+    Offset = fieldFromInstruction(Insn, 0, 4);
     break;
   }
 
@@ -1373,14 +1353,20 @@ static DecodeStatus DecodeMemMMImm12(MCInst &Inst, unsigned Insn,
     Inst.addOperand(MCOperand::createReg(Base));
     Inst.addOperand(MCOperand::createImm(Offset));
     break;
+  case Mips::LWP_MM:
+  case Mips::SWP_MM:
+    if (RegNo == 31)
+      return MCDisassembler::Fail;
+    Inst.addOperand(MCOperand::createReg(
+        getReg(Decoder, Mips::GPR32PairRegClassID, RegNo)));
+    Inst.addOperand(MCOperand::createReg(Base));
+    Inst.addOperand(MCOperand::createImm(Offset));
+    break;
   case Mips::SC_MM:
     Inst.addOperand(MCOperand::createReg(Reg));
     [[fallthrough]];
   default:
     Inst.addOperand(MCOperand::createReg(Reg));
-    if (Inst.getOpcode() == Mips::LWP_MM || Inst.getOpcode() == Mips::SWP_MM)
-      Inst.addOperand(MCOperand::createReg(Reg+1));
-
     Inst.addOperand(MCOperand::createReg(Base));
     Inst.addOperand(MCOperand::createImm(Offset));
   }
@@ -1733,56 +1719,12 @@ static DecodeStatus DecodeANDI16Imm(MCInst &Inst, unsigned Insn,
   return MCDisassembler::Success;
 }
 
-static DecodeStatus DecodeMovePRegPair(MCInst &Inst, unsigned RegPair,
-                                       uint64_t Address,
-                                       const MCDisassembler *Decoder) {
-  switch (RegPair) {
-  default:
-    return MCDisassembler::Fail;
-  case 0:
-    Inst.addOperand(MCOperand::createReg(Mips::A1));
-    Inst.addOperand(MCOperand::createReg(Mips::A2));
-    break;
-  case 1:
-    Inst.addOperand(MCOperand::createReg(Mips::A1));
-    Inst.addOperand(MCOperand::createReg(Mips::A3));
-    break;
-  case 2:
-    Inst.addOperand(MCOperand::createReg(Mips::A2));
-    Inst.addOperand(MCOperand::createReg(Mips::A3));
-    break;
-  case 3:
-    Inst.addOperand(MCOperand::createReg(Mips::A0));
-    Inst.addOperand(MCOperand::createReg(Mips::S5));
-    break;
-  case 4:
-    Inst.addOperand(MCOperand::createReg(Mips::A0));
-    Inst.addOperand(MCOperand::createReg(Mips::S6));
-    break;
-  case 5:
-    Inst.addOperand(MCOperand::createReg(Mips::A0));
-    Inst.addOperand(MCOperand::createReg(Mips::A1));
-    break;
-  case 6:
-    Inst.addOperand(MCOperand::createReg(Mips::A0));
-    Inst.addOperand(MCOperand::createReg(Mips::A2));
-    break;
-  case 7:
-    Inst.addOperand(MCOperand::createReg(Mips::A0));
-    Inst.addOperand(MCOperand::createReg(Mips::A3));
-    break;
-  }
-
-  return MCDisassembler::Success;
-}
-
 static DecodeStatus DecodeMovePOperands(MCInst &Inst, unsigned Insn,
                                         uint64_t Address,
                                         const MCDisassembler *Decoder) {
   unsigned RegPair = fieldFromInstruction(Insn, 7, 3);
-  if (DecodeMovePRegPair(Inst, RegPair, Address, Decoder) ==
-      MCDisassembler::Fail)
-    return MCDisassembler::Fail;
+  Inst.addOperand(MCOperand::createReg(
+      getReg(Decoder, Mips::GPRMM16MovePPairRegClassID, RegPair)));
 
   unsigned RegRs;
   if (static_cast<const MipsDisassembler *>(Decoder)->hasMips32r6())

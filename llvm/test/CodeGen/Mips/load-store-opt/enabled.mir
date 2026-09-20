@@ -1,0 +1,35 @@
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -mattr=+micromips -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,MM
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,STD
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -mattr=+mips16 -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s --check-prefixes=CHECK,STD
+
+--- |
+  define void @enabled() { ret void }
+  define void @disabled() noinline optnone { ret void }
+...
+---
+name: enabled
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: enabled
+    ; MM: SWM16_MM killed $s0_ra, $sp, 0
+    ; STD: SW killed $s0, $sp, 0
+    ; STD-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+---
+name: disabled
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0, $ra
+    ; CHECK-LABEL: name: disabled
+    ; CHECK: SW killed $s0, $sp, 0
+    ; CHECK-NEXT: SW killed $ra, $sp, 4
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW killed $ra, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...

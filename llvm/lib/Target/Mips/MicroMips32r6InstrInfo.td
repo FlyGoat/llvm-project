@@ -1038,8 +1038,7 @@ class BREAK16_MMR6_DESC : BrkSdbbp16MM<"break16">,
 class LI16_MMR6_DESC : LoadImmMM16<"li16", li16_imm, GPRMM16Opnd>,
       MMR6Arch<"li16">, IsAsCheapAsAMove;
 class MOVE16_MMR6_DESC : MoveMM16<"move16", GPR32Opnd>, MMR6Arch<"move16">;
-class MOVEP_MMR6_DESC : MovePMM16<"movep", GPRMM16OpndMovePPairFirst,
-                                  GPRMM16OpndMovePPairSecond, GPRMM16OpndMoveP>,
+class MOVEP_MMR6_DESC : MovePMM16<"movep">,
                         MMR6Arch<"movep">;
 class SDBBP16_MMR6_DESC : BrkSdbbp16MM<"sdbbp16">,
                           MMR6Arch<"sdbbp16">;

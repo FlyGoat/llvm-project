@@ -35,8 +35,6 @@ enum OperandTransfer {
   OT_Operands02,    ///< Transfer operands 0 and 2
   OT_Operand2,      ///< Transfer just operand 2
   OT_OperandsXOR,   ///< Transfer operands for XOR16
-  OT_OperandsLwp,   ///< Transfer operands for LWP
-  OT_OperandsSwp,   ///< Transfer operands for SWP
   OT_OperandsMovep, ///< Transfer operands for MOVEP
 };
 
@@ -158,10 +156,6 @@ private:
   // returns true on success.
   static bool ReduceXWtoXWSP(ReduceEntryFunArgs *Arguments);
 
-  // Attempts to reduce two LW/SW instructions into LWP/SWP instruction,
-  // returns true on success.
-  static bool ReduceXWtoXWP(ReduceEntryFunArgs *Arguments);
-
   // Attempts to reduce LBU/LHU instruction into LBU16/LHU16,
   // returns true on success.
   static bool ReduceLXUtoLXU16(ReduceEntryFunArgs *Arguments);
@@ -237,14 +231,8 @@ ReduceEntryVector MicroMipsSizeReduce::ReduceTable = {
      OpInfo(OT_OperandsAll), ImmField(1, 0, 16, 2)},
     {RT_OneInstr, OpCodes(Mips::LHu_MM, Mips::LHU16_MM), ReduceLXUtoLXU16,
      OpInfo(OT_OperandsAll), ImmField(1, 0, 16, 2)},
-    {RT_TwoInstr, OpCodes(Mips::LW, Mips::LWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsLwp), ImmField(0, -2048, 2048, 2)},
     {RT_OneInstr, OpCodes(Mips::LW, Mips::LWSP_MM), ReduceXWtoXWSP,
      OpInfo(OT_OperandsAll), ImmField(2, 0, 32, 2)},
-    {RT_TwoInstr, OpCodes(Mips::LW16_MM, Mips::LWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsLwp), ImmField(0, -2048, 2048, 2)},
-    {RT_TwoInstr, OpCodes(Mips::LW_MM, Mips::LWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsLwp), ImmField(0, -2048, 2048, 2)},
     {RT_OneInstr, OpCodes(Mips::LW_MM, Mips::LWSP_MM), ReduceXWtoXWSP,
      OpInfo(OT_OperandsAll), ImmField(2, 0, 32, 2)},
     {RT_TwoInstr, OpCodes(Mips::MOVE16_MM, Mips::MOVEP_MM), ReduceMoveToMovep,
@@ -263,14 +251,8 @@ ReduceEntryVector MicroMipsSizeReduce::ReduceTable = {
     {RT_OneInstr, OpCodes(Mips::SUBu_MM, Mips::SUBU16_MM),
      ReduceArithmeticInstructions, OpInfo(OT_OperandsAll),
      ImmField(0, 0, 0, -1)},
-    {RT_TwoInstr, OpCodes(Mips::SW, Mips::SWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsSwp), ImmField(0, -2048, 2048, 2)},
     {RT_OneInstr, OpCodes(Mips::SW, Mips::SWSP_MM), ReduceXWtoXWSP,
      OpInfo(OT_OperandsAll), ImmField(2, 0, 32, 2)},
-    {RT_TwoInstr, OpCodes(Mips::SW16_MM, Mips::SWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsSwp), ImmField(0, -2048, 2048, 2)},
-    {RT_TwoInstr, OpCodes(Mips::SW_MM, Mips::SWP_MM), ReduceXWtoXWP,
-     OpInfo(OT_OperandsSwp), ImmField(0, -2048, 2048, 2)},
     {RT_OneInstr, OpCodes(Mips::SW_MM, Mips::SWSP_MM), ReduceXWtoXWSP,
      OpInfo(OT_OperandsAll), ImmField(2, 0, 32, 2)},
     {RT_OneInstr, OpCodes(Mips::XOR, Mips::XOR16_MM), ReduceXORtoXOR16,
@@ -347,68 +329,6 @@ static bool ImmInRange(MachineInstr *MI, const ReduceEntry &Entry) {
   return true;
 }
 
-// Returns true if MI can be reduced to lwp/swp instruction
-static bool CheckXWPInstr(MachineInstr *MI, bool ReduceToLwp,
-                          const ReduceEntry &Entry) {
-
-  if (ReduceToLwp &&
-      !(MI->getOpcode() == Mips::LW || MI->getOpcode() == Mips::LW_MM ||
-        MI->getOpcode() == Mips::LW16_MM))
-    return false;
-
-  if (!ReduceToLwp &&
-      !(MI->getOpcode() == Mips::SW || MI->getOpcode() == Mips::SW_MM ||
-        MI->getOpcode() == Mips::SW16_MM))
-    return false;
-
-  Register reg = MI->getOperand(0).getReg();
-  if (reg == Mips::RA)
-    return false;
-
-  if (!ImmInRange(MI, Entry))
-    return false;
-
-  if (ReduceToLwp && (MI->getOperand(0).getReg() == MI->getOperand(1).getReg()))
-    return false;
-
-  return true;
-}
-
-// Returns true if the registers Reg1 and Reg2 are consecutive
-static bool ConsecutiveRegisters(unsigned Reg1, unsigned Reg2) {
-  constexpr std::array<unsigned, 31> Registers = {
-      {Mips::AT, Mips::V0, Mips::V1, Mips::A0, Mips::A1, Mips::A2, Mips::A3,
-       Mips::T0, Mips::T1, Mips::T2, Mips::T3, Mips::T4, Mips::T5, Mips::T6,
-       Mips::T7, Mips::S0, Mips::S1, Mips::S2, Mips::S3, Mips::S4, Mips::S5,
-       Mips::S6, Mips::S7, Mips::T8, Mips::T9, Mips::K0, Mips::K1, Mips::GP,
-       Mips::SP, Mips::FP, Mips::RA}};
-
-  for (uint8_t i = 0; i < Registers.size() - 1; i++) {
-    if (Registers[i] == Reg1) {
-      if (Registers[i + 1] == Reg2)
-        return true;
-      else
-        return false;
-    }
-  }
-  return false;
-}
-
-// Returns true if registers and offsets are consecutive
-static bool ConsecutiveInstr(MachineInstr *MI1, MachineInstr *MI2) {
-
-  int64_t Offset1, Offset2;
-  if (!GetImm(MI1, 2, Offset1))
-    return false;
-  if (!GetImm(MI2, 2, Offset2))
-    return false;
-
-  Register Reg1 = MI1->getOperand(0).getReg();
-  Register Reg2 = MI2->getOperand(0).getReg();
-
-  return ((Offset1 == (Offset2 - 4)) && (ConsecutiveRegisters(Reg1, Reg2)));
-}
-
 MicroMipsSizeReduce::MicroMipsSizeReduce() : MachineFunctionPass(ID) {}
 
 bool MicroMipsSizeReduce::ReduceMI(const MachineBasicBlock::instr_iterator &MII,
@@ -449,46 +369,6 @@ bool MicroMipsSizeReduce::ReduceXWtoXWSP(ReduceEntryFunArgs *Arguments) {
     return false;
 
   return ReplaceInstruction(MI, Entry);
-}
-
-bool MicroMipsSizeReduce::ReduceXWtoXWP(ReduceEntryFunArgs *Arguments) {
-
-  const ReduceEntry &Entry = Arguments->Entry;
-  MachineBasicBlock::instr_iterator &NextMII = Arguments->NextMII;
-  const MachineBasicBlock::instr_iterator &E =
-      Arguments->MI->getParent()->instr_end();
-
-  if (NextMII == E)
-    return false;
-
-  MachineInstr *MI1 = Arguments->MI;
-  MachineInstr *MI2 = &*NextMII;
-
-  // ReduceToLwp = true/false - reduce to LWP/SWP instruction
-  bool ReduceToLwp = (MI1->getOpcode() == Mips::LW) ||
-                     (MI1->getOpcode() == Mips::LW_MM) ||
-                     (MI1->getOpcode() == Mips::LW16_MM);
-
-  if (!CheckXWPInstr(MI1, ReduceToLwp, Entry))
-    return false;
-
-  if (!CheckXWPInstr(MI2, ReduceToLwp, Entry))
-    return false;
-
-  Register Reg1 = MI1->getOperand(1).getReg();
-  Register Reg2 = MI2->getOperand(1).getReg();
-
-  if (Reg1 != Reg2)
-    return false;
-
-  bool ConsecutiveForward = ConsecutiveInstr(MI1, MI2);
-  bool ConsecutiveBackward = ConsecutiveInstr(MI2, MI1);
-
-  if (!(ConsecutiveForward || ConsecutiveBackward))
-    return false;
-
-  NextMII = std::next(NextMII);
-  return ReplaceInstruction(MI1, Entry, MI2, ConsecutiveForward);
 }
 
 bool MicroMipsSizeReduce::ReduceArithmeticInstructions(
@@ -591,23 +471,6 @@ static bool IsMovepDestinationReg(unsigned Reg) {
   return false;
 }
 
-// Returns true if the registers can be a pair of destination
-// registers in MOVEP instruction
-static bool IsMovepDestinationRegPair(unsigned R0, unsigned R1) {
-
-  if ((R0 == Mips::A0 && R1 == Mips::S5) ||
-      (R0 == Mips::A0 && R1 == Mips::S6) ||
-      (R0 == Mips::A0 && R1 == Mips::A1) ||
-      (R0 == Mips::A0 && R1 == Mips::A2) ||
-      (R0 == Mips::A0 && R1 == Mips::A3) ||
-      (R0 == Mips::A1 && R1 == Mips::A2) ||
-      (R0 == Mips::A1 && R1 == Mips::A3) ||
-      (R0 == Mips::A2 && R1 == Mips::A3))
-    return true;
-
-  return false;
-}
-
 bool MicroMipsSizeReduce::ReduceMoveToMovep(ReduceEntryFunArgs *Arguments) {
 
   const ReduceEntry &Entry = Arguments->Entry;
@@ -639,10 +502,13 @@ bool MicroMipsSizeReduce::ReduceMoveToMovep(ReduceEntryFunArgs *Arguments) {
   if (!IsMovepSrcRegister(RegSrcMI2))
     return false;
 
+  const auto &MRI = *MI1->getMF()->getSubtarget().getRegisterInfo();
   bool ConsecutiveForward;
-  if (IsMovepDestinationRegPair(RegDstMI1, RegDstMI2)) {
+  if (MIPS_MC::getRegisterPair(RegDstMI1, RegDstMI2, MRI,
+                               Mips::GPRMM16MovePPairRegClassID)) {
     ConsecutiveForward = true;
-  } else if (IsMovepDestinationRegPair(RegDstMI2, RegDstMI1)) {
+  } else if (MIPS_MC::getRegisterPair(RegDstMI2, RegDstMI1, MRI,
+                                      Mips::GPRMM16MovePPairRegClassID)) {
     ConsecutiveForward = false;
   } else
     return false;
@@ -730,26 +596,21 @@ bool MicroMipsSizeReduce::ReplaceInstruction(MachineInstr *MI,
       }
       break;
     }
-    case OT_OperandsMovep:
-    case OT_OperandsLwp:
-    case OT_OperandsSwp: {
-      if (ConsecutiveForward) {
-        MIB.add(MI->getOperand(0));
-        MIB.add(MI2->getOperand(0));
-        MIB.add(MI->getOperand(1));
-        if (OpTransfer == OT_OperandsMovep)
-          MIB.add(MI2->getOperand(1));
-        else
-          MIB.add(MI->getOperand(2));
-      } else { // consecutive backward
-        MIB.add(MI2->getOperand(0));
-        MIB.add(MI->getOperand(0));
-        MIB.add(MI2->getOperand(1));
-        if (OpTransfer == OT_OperandsMovep)
-          MIB.add(MI->getOperand(1));
-        else
-          MIB.add(MI2->getOperand(2));
-      }
+    case OT_OperandsMovep: {
+      MachineInstr *First = ConsecutiveForward ? MI : MI2;
+      MachineInstr *Second = ConsecutiveForward ? MI2 : MI;
+      const MachineOperand &FirstReg = First->getOperand(0);
+      const MachineOperand &SecondReg = Second->getOperand(0);
+      MCRegister Pair = MIPS_MC::getRegisterPair(
+          FirstReg.getReg(), SecondReg.getReg(),
+          *MI->getMF()->getSubtarget().getRegisterInfo(),
+          Mips::GPRMM16MovePPairRegClassID);
+      assert(Pair && "Invalid register pair");
+      MIB.addReg(Pair, RegState::Define | getDeadRegState(FirstReg.isDead() &&
+                                                          SecondReg.isDead()));
+      MIB.add(First->getOperand(1));
+      MIB.add(Second->getOperand(1));
+      MIB.setMIFlags(MI->getFlags() | MI2->getFlags());
 
       LLVM_DEBUG(dbgs() << "and converting 32-bit: " << *MI2
                         << "       to: " << *MIB);

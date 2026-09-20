@@ -1,0 +1,61 @@
+# RUN: llc -mtriple=mipsel -mcpu=mips32r2 -mattr=+micromips \
+# RUN:   -run-pass=mips-load-store-opt -verify-machineinstrs %s -o - | FileCheck %s
+
+---
+name: store_undef_second
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s0
+    ; CHECK-LABEL: name: store_undef_second
+    ; CHECK: SWP_MM undef $s0_s1, $sp, 0, implicit killed $s0
+    SW killed $s0, $sp, 0 :: (store (s32))
+    SW undef $s1, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+---
+name: store_undef_first_reversed
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $s1
+    ; CHECK-LABEL: name: store_undef_first_reversed
+    ; CHECK: SWP_MM undef $s0_s1, $sp, 0, implicit killed $s1
+    SW killed $s1, $sp, 4 :: (store (s32))
+    SW undef $s0, $sp, 0 :: (store (s32))
+    PseudoReturn undef $ra
+...
+---
+name: store_undef_pair
+tracksRegLiveness: true
+body: |
+  bb.0:
+    ; CHECK-LABEL: name: store_undef_pair
+    ; CHECK: SWP_MM undef $s0_s1, $sp, 0
+    SW undef $s0, $sp, 0 :: (store (s32))
+    SW undef $s1, $sp, 4 :: (store (s32))
+    PseudoReturn undef $ra
+...
+---
+name: load_dead_pair
+tracksRegLiveness: true
+body: |
+  bb.0:
+    ; CHECK-LABEL: name: load_dead_pair
+    ; CHECK: dead $s0_s1 = LWP_MM $sp, 0
+    dead $s0 = LW $sp, 0 :: (load (s32))
+    dead $s1 = LW $sp, 4 :: (load (s32))
+    PseudoReturn undef $ra
+...
+---
+name: load_partially_dead_pair
+tracksRegLiveness: true
+body: |
+  bb.0:
+    ; CHECK-LABEL: name: load_partially_dead_pair
+    ; CHECK: $s0_s1 = LWP_MM $sp, 0
+    ; CHECK-NEXT: PseudoReturn undef $ra, implicit $s1
+    dead $s0 = LW $sp, 0 :: (load (s32))
+    $s1 = LW $sp, 4 :: (load (s32))
+    PseudoReturn undef $ra, implicit $s1
+...
