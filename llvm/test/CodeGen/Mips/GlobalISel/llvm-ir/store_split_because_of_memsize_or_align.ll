@@ -34,8 +34,7 @@ define void @store3align1(ptr %S, i32 signext %a) {
 ; MIPS32-LABEL: store3align1:
 ; MIPS32:       # %bb.0: # %entry
 ; MIPS32-NEXT:    srl $1, $5, 16
-; MIPS32-NEXT:    andi $2, $5, 65535
-; MIPS32-NEXT:    srl $2, $2, 8
+; MIPS32-NEXT:    srl $2, $5, 8
 ; MIPS32-NEXT:    sb $5, 0($4)
 ; MIPS32-NEXT:    sb $2, 1($4)
 ; MIPS32-NEXT:    sb $1, 2($4)
@@ -52,8 +51,7 @@ define void @store3align1(ptr %S, i32 signext %a) {
 ; MIPS32-BE-LABEL: store3align1:
 ; MIPS32-BE:       # %bb.0: # %entry
 ; MIPS32-BE-NEXT:    srl $1, $5, 8
-; MIPS32-BE-NEXT:    andi $2, $1, 65535
-; MIPS32-BE-NEXT:    srl $2, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $1, 8
 ; MIPS32-BE-NEXT:    sb $2, 0($4)
 ; MIPS32-BE-NEXT:    sb $1, 1($4)
 ; MIPS32-BE-NEXT:    sb $5, 2($4)
@@ -343,8 +341,7 @@ define void @store6align1(ptr %S, i64 %a) {
 ; MIPS32-NEXT:    addu $2, $4, $1
 ; MIPS32-NEXT:    swl $6, 3($4)
 ; MIPS32-NEXT:    swr $6, 0($4)
-; MIPS32-NEXT:    andi $1, $7, 65535
-; MIPS32-NEXT:    srl $1, $1, 8
+; MIPS32-NEXT:    srl $1, $7, 8
 ; MIPS32-NEXT:    sb $7, 4($4)
 ; MIPS32-NEXT:    sb $1, 1($2)
 ; MIPS32-NEXT:    jr $ra
@@ -365,8 +362,7 @@ define void @store6align1(ptr %S, i64 %a) {
 ; MIPS32-BE-NEXT:    addu $1, $4, $1
 ; MIPS32-BE-NEXT:    swl $2, 0($4)
 ; MIPS32-BE-NEXT:    swr $2, 3($4)
-; MIPS32-BE-NEXT:    andi $2, $7, 65535
-; MIPS32-BE-NEXT:    srl $2, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $7, 8
 ; MIPS32-BE-NEXT:    sb $2, 4($4)
 ; MIPS32-BE-NEXT:    sb $7, 1($1)
 ; MIPS32-BE-NEXT:    jr $ra
@@ -510,8 +506,7 @@ define void @store7align1(ptr %S, i64 %a) {
 ; MIPS32-NEXT:    swl $6, 3($4)
 ; MIPS32-NEXT:    swr $6, 0($4)
 ; MIPS32-NEXT:    srl $1, $7, 16
-; MIPS32-NEXT:    andi $3, $7, 65535
-; MIPS32-NEXT:    srl $3, $3, 8
+; MIPS32-NEXT:    srl $3, $7, 8
 ; MIPS32-NEXT:    sb $7, 4($4)
 ; MIPS32-NEXT:    sb $3, 1($2)
 ; MIPS32-NEXT:    sb $1, 2($2)
@@ -538,8 +533,7 @@ define void @store7align1(ptr %S, i64 %a) {
 ; MIPS32-BE-NEXT:    swl $2, 0($4)
 ; MIPS32-BE-NEXT:    swr $2, 3($4)
 ; MIPS32-BE-NEXT:    srl $2, $7, 8
-; MIPS32-BE-NEXT:    andi $3, $2, 65535
-; MIPS32-BE-NEXT:    srl $3, $3, 8
+; MIPS32-BE-NEXT:    srl $3, $2, 8
 ; MIPS32-BE-NEXT:    sb $3, 4($4)
 ; MIPS32-BE-NEXT:    sb $2, 1($1)
 ; MIPS32-BE-NEXT:    sb $7, 2($1)
@@ -1061,8 +1055,7 @@ entry:
 define void @store2align1(ptr %p, i32 %v) {
 ; MIPS32-LABEL: store2align1:
 ; MIPS32:       # %bb.0:
-; MIPS32-NEXT:    andi $1, $5, 65535
-; MIPS32-NEXT:    srl $1, $1, 8
+; MIPS32-NEXT:    srl $1, $5, 8
 ; MIPS32-NEXT:    sb $5, 0($4)
 ; MIPS32-NEXT:    sb $1, 1($4)
 ; MIPS32-NEXT:    jr $ra
@@ -1075,8 +1068,7 @@ define void @store2align1(ptr %p, i32 %v) {
 ;
 ; MIPS32-BE-LABEL: store2align1:
 ; MIPS32-BE:       # %bb.0:
-; MIPS32-BE-NEXT:    andi $1, $5, 65535
-; MIPS32-BE-NEXT:    srl $1, $1, 8
+; MIPS32-BE-NEXT:    srl $1, $5, 8
 ; MIPS32-BE-NEXT:    sb $1, 0($4)
 ; MIPS32-BE-NEXT:    sb $5, 1($4)
 ; MIPS32-BE-NEXT:    jr $ra
@@ -1099,8 +1091,7 @@ define void @store20bits_align1(ptr %p, i32 %v) {
 ; MIPS32-NEXT:    ori $1, $1, 65535
 ; MIPS32-NEXT:    and $3, $5, $1
 ; MIPS32-NEXT:    srl $1, $3, 16
-; MIPS32-NEXT:    andi $2, $3, 65535
-; MIPS32-NEXT:    srl $2, $2, 8
+; MIPS32-NEXT:    srl $2, $3, 8
 ; MIPS32-NEXT:    sb $3, 0($4)
 ; MIPS32-NEXT:    sb $2, 1($4)
 ; MIPS32-NEXT:    sb $1, 2($4)
@@ -1123,8 +1114,7 @@ define void @store20bits_align1(ptr %p, i32 %v) {
 ; MIPS32-BE-NEXT:    ori $1, $1, 65535
 ; MIPS32-BE-NEXT:    and $1, $5, $1
 ; MIPS32-BE-NEXT:    srl $2, $1, 8
-; MIPS32-BE-NEXT:    andi $3, $2, 65535
-; MIPS32-BE-NEXT:    srl $3, $3, 8
+; MIPS32-BE-NEXT:    srl $3, $2, 8
 ; MIPS32-BE-NEXT:    sb $3, 0($4)
 ; MIPS32-BE-NEXT:    sb $2, 1($4)
 ; MIPS32-BE-NEXT:    sb $1, 2($4)
@@ -1155,8 +1145,7 @@ define void @store42bits_align1(ptr %p, i64 %v) {
 ; MIPS32-NEXT:    addu $2, $4, $2
 ; MIPS32-NEXT:    swl $1, 3($4)
 ; MIPS32-NEXT:    swr $1, 0($4)
-; MIPS32-NEXT:    andi $1, $3, 65535
-; MIPS32-NEXT:    srl $1, $1, 8
+; MIPS32-NEXT:    srl $1, $3, 8
 ; MIPS32-NEXT:    sb $3, 4($4)
 ; MIPS32-NEXT:    sb $1, 1($2)
 ; MIPS32-NEXT:    jr $ra
@@ -1183,8 +1172,7 @@ define void @store42bits_align1(ptr %p, i64 %v) {
 ; MIPS32-BE-NEXT:    addu $2, $4, $2
 ; MIPS32-BE-NEXT:    swl $3, 0($4)
 ; MIPS32-BE-NEXT:    swr $3, 3($4)
-; MIPS32-BE-NEXT:    andi $3, $1, 65535
-; MIPS32-BE-NEXT:    srl $3, $3, 8
+; MIPS32-BE-NEXT:    srl $3, $1, 8
 ; MIPS32-BE-NEXT:    sb $3, 4($4)
 ; MIPS32-BE-NEXT:    sb $1, 1($2)
 ; MIPS32-BE-NEXT:    jr $ra

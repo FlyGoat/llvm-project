@@ -226,13 +226,12 @@ body:             |
     ; MIPS32-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[COPY2]], [[C]](s32)
     ; MIPS32-NEXT: [[C1:%[0-9]+]]:_(s32) = G_CONSTANT i32 2
     ; MIPS32-NEXT: [[PTR_ADD:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C1]](s32)
+    ; MIPS32-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[COPY2]](s32)
     ; MIPS32-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[COPY2]], [[C3]]
-    ; MIPS32-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C2]](s32)
-    ; MIPS32-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C4]](s32)
-    ; MIPS32-NEXT: G_STORE [[COPY2]](s32), [[COPY]](p0) :: (store (s8) into %ir.0)
+    ; MIPS32-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C2]](s32)
+    ; MIPS32-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C3]](s32)
+    ; MIPS32-NEXT: G_STORE [[COPY3]](s32), [[COPY]](p0) :: (store (s8) into %ir.0)
     ; MIPS32-NEXT: G_STORE [[LSHR1]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 1)
     ; MIPS32-NEXT: G_STORE [[LSHR]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 2)
     ; MIPS32-NEXT: RetRA
@@ -261,14 +260,12 @@ body:             |
     ; MIPS32-BE-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[COPY2]], [[C]](s32)
     ; MIPS32-BE-NEXT: [[C1:%[0-9]+]]:_(s32) = G_CONSTANT i32 2
     ; MIPS32-BE-NEXT: [[PTR_ADD:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C1]](s32)
-    ; MIPS32-BE-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-BE-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-BE-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[LSHR]], [[C3]]
-    ; MIPS32-BE-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C2]](s32)
-    ; MIPS32-BE-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-BE-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C4]](s32)
+    ; MIPS32-BE-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[LSHR]](s32)
+    ; MIPS32-BE-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C]](s32)
+    ; MIPS32-BE-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-BE-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C2]](s32)
     ; MIPS32-BE-NEXT: G_STORE [[LSHR1]](s32), [[COPY]](p0) :: (store (s8) into %ir.0)
-    ; MIPS32-BE-NEXT: G_STORE [[LSHR]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 1)
+    ; MIPS32-BE-NEXT: G_STORE [[COPY3]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 1)
     ; MIPS32-BE-NEXT: G_STORE [[COPY2]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 2)
     ; MIPS32-BE-NEXT: RetRA
     ;
@@ -815,13 +812,12 @@ body:             |
     ; MIPS32-NEXT: [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 4
     ; MIPS32-NEXT: [[PTR_ADD:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C]](s32)
     ; MIPS32-NEXT: G_STORE [[COPY1]](s32), [[COPY]](p0) :: (store (s32) into %ir.0, align 1)
+    ; MIPS32-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[COPY2]](s32)
     ; MIPS32-NEXT: [[C1:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[COPY2]], [[C2]]
-    ; MIPS32-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C1]](s32)
-    ; MIPS32-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C3]](s32)
-    ; MIPS32-NEXT: G_STORE [[COPY2]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
+    ; MIPS32-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C1]](s32)
+    ; MIPS32-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C2]](s32)
+    ; MIPS32-NEXT: G_STORE [[COPY3]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
     ; MIPS32-NEXT: G_STORE [[LSHR]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 5)
     ; MIPS32-NEXT: RetRA
     ;
@@ -850,14 +846,13 @@ body:             |
     ; MIPS32-BE-NEXT: [[C1:%[0-9]+]]:_(s32) = G_CONSTANT i32 4
     ; MIPS32-BE-NEXT: [[PTR_ADD:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[COPY]], [[C1]](s32)
     ; MIPS32-BE-NEXT: G_STORE [[OR]](s32), [[COPY]](p0) :: (store (s32) into %ir.0, align 1)
+    ; MIPS32-BE-NEXT: [[COPY3:%[0-9]+]]:_(s32) = COPY [[COPY1]](s32)
     ; MIPS32-BE-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-BE-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-BE-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[COPY1]], [[C3]]
-    ; MIPS32-BE-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C2]](s32)
-    ; MIPS32-BE-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-BE-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C4]](s32)
+    ; MIPS32-BE-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C2]](s32)
+    ; MIPS32-BE-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-BE-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C3]](s32)
     ; MIPS32-BE-NEXT: G_STORE [[LSHR1]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
-    ; MIPS32-BE-NEXT: G_STORE [[COPY1]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 5)
+    ; MIPS32-BE-NEXT: G_STORE [[COPY3]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 5)
     ; MIPS32-BE-NEXT: RetRA
     ;
     ; MIPS32R6-BE-LABEL: name: store6align1
@@ -1122,13 +1117,12 @@ body:             |
     ; MIPS32-NEXT: [[LSHR:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C1]](s32)
     ; MIPS32-NEXT: [[C2:%[0-9]+]]:_(s32) = G_CONSTANT i32 2
     ; MIPS32-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C2]](s32)
+    ; MIPS32-NEXT: [[COPY4:%[0-9]+]]:_(s32) = COPY [[COPY3]](s32)
     ; MIPS32-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[COPY3]], [[C4]]
-    ; MIPS32-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C3]](s32)
-    ; MIPS32-NEXT: [[C5:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-NEXT: [[PTR_ADD2:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C5]](s32)
-    ; MIPS32-NEXT: G_STORE [[COPY3]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
+    ; MIPS32-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[COPY4]], [[C3]](s32)
+    ; MIPS32-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-NEXT: [[PTR_ADD2:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C4]](s32)
+    ; MIPS32-NEXT: G_STORE [[COPY4]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
     ; MIPS32-NEXT: G_STORE [[LSHR1]](s32), [[PTR_ADD2]](p0) :: (store (s8) into %ir.0 + 5)
     ; MIPS32-NEXT: G_STORE [[LSHR]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 6)
     ; MIPS32-NEXT: RetRA
@@ -1169,14 +1163,12 @@ body:             |
     ; MIPS32-BE-NEXT: [[LSHR1:%[0-9]+]]:_(s32) = G_LSHR [[COPY3]], [[C1]](s32)
     ; MIPS32-BE-NEXT: [[C3:%[0-9]+]]:_(s32) = G_CONSTANT i32 2
     ; MIPS32-BE-NEXT: [[PTR_ADD1:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C3]](s32)
-    ; MIPS32-BE-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 8
-    ; MIPS32-BE-NEXT: [[C5:%[0-9]+]]:_(s32) = G_CONSTANT i32 65535
-    ; MIPS32-BE-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[LSHR1]], [[C5]]
-    ; MIPS32-BE-NEXT: [[LSHR2:%[0-9]+]]:_(s32) = G_LSHR [[AND]], [[C4]](s32)
-    ; MIPS32-BE-NEXT: [[C6:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
-    ; MIPS32-BE-NEXT: [[PTR_ADD2:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C6]](s32)
+    ; MIPS32-BE-NEXT: [[COPY4:%[0-9]+]]:_(s32) = COPY [[LSHR1]](s32)
+    ; MIPS32-BE-NEXT: [[LSHR2:%[0-9]+]]:_(s32) = G_LSHR [[COPY4]], [[C1]](s32)
+    ; MIPS32-BE-NEXT: [[C4:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+    ; MIPS32-BE-NEXT: [[PTR_ADD2:%[0-9]+]]:_(p0) = nuw inbounds G_PTR_ADD [[PTR_ADD]], [[C4]](s32)
     ; MIPS32-BE-NEXT: G_STORE [[LSHR2]](s32), [[PTR_ADD]](p0) :: (store (s8) into %ir.0 + 4)
-    ; MIPS32-BE-NEXT: G_STORE [[LSHR1]](s32), [[PTR_ADD2]](p0) :: (store (s8) into %ir.0 + 5)
+    ; MIPS32-BE-NEXT: G_STORE [[COPY4]](s32), [[PTR_ADD2]](p0) :: (store (s8) into %ir.0 + 5)
     ; MIPS32-BE-NEXT: G_STORE [[COPY3]](s32), [[PTR_ADD1]](p0) :: (store (s8) into %ir.0 + 6)
     ; MIPS32-BE-NEXT: RetRA
     ;

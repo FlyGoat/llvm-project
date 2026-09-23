@@ -288,13 +288,11 @@ define i64 @load56(ptr %p) {
   ret i64 %r
 }
 
-; TODO: Keep the wider source when splitting stores to avoid trunc/extend masks.
 define void @store24(ptr %p, i32 %v) {
 ; LE-LABEL: store24:
 ; LE:       # %bb.0:
 ; LE-NEXT:    srl $1, $5, 16
-; LE-NEXT:    andi $2, $5, 65535
-; LE-NEXT:    srl $2, $2, 8
+; LE-NEXT:    srl $2, $5, 8
 ; LE-NEXT:    sb $5, 0($4)
 ; LE-NEXT:    sb $2, 1($4)
 ; LE-NEXT:    jr $ra
@@ -303,8 +301,7 @@ define void @store24(ptr %p, i32 %v) {
 ; BE-LABEL: store24:
 ; BE:       # %bb.0:
 ; BE-NEXT:    srl $1, $5, 8
-; BE-NEXT:    andi $2, $1, 65535
-; BE-NEXT:    srl $2, $2, 8
+; BE-NEXT:    srl $2, $1, 8
 ; BE-NEXT:    sb $2, 0($4)
 ; BE-NEXT:    sb $1, 1($4)
 ; BE-NEXT:    jr $ra
@@ -335,8 +332,7 @@ define void @store48(ptr %p, i64 %v) {
 ; LE-NEXT:    addu $1, $4, $1
 ; LE-NEXT:    swl $6, 3($4)
 ; LE-NEXT:    swr $6, 0($4)
-; LE-NEXT:    andi $2, $7, 65535
-; LE-NEXT:    srl $2, $2, 8
+; LE-NEXT:    srl $2, $7, 8
 ; LE-NEXT:    sb $7, 4($4)
 ; LE-NEXT:    jr $ra
 ; LE-NEXT:    sb $2, 1($1)
@@ -350,8 +346,7 @@ define void @store48(ptr %p, i64 %v) {
 ; BE-NEXT:    addu $2, $4, $2
 ; BE-NEXT:    swl $1, 0($4)
 ; BE-NEXT:    swr $1, 3($4)
-; BE-NEXT:    andi $1, $7, 65535
-; BE-NEXT:    srl $1, $1, 8
+; BE-NEXT:    srl $1, $7, 8
 ; BE-NEXT:    sb $1, 4($4)
 ; BE-NEXT:    jr $ra
 ; BE-NEXT:    sb $7, 1($2)
@@ -383,8 +378,7 @@ define void @store56(ptr %p, i64 %v) {
 ; LE-NEXT:    swl $6, 3($4)
 ; LE-NEXT:    swr $6, 0($4)
 ; LE-NEXT:    srl $2, $7, 16
-; LE-NEXT:    andi $3, $7, 65535
-; LE-NEXT:    srl $3, $3, 8
+; LE-NEXT:    srl $3, $7, 8
 ; LE-NEXT:    sb $7, 4($4)
 ; LE-NEXT:    sb $3, 1($1)
 ; LE-NEXT:    jr $ra
@@ -400,8 +394,7 @@ define void @store56(ptr %p, i64 %v) {
 ; BE-NEXT:    swl $1, 0($4)
 ; BE-NEXT:    swr $1, 3($4)
 ; BE-NEXT:    srl $1, $7, 8
-; BE-NEXT:    andi $3, $1, 65535
-; BE-NEXT:    srl $3, $3, 8
+; BE-NEXT:    srl $3, $1, 8
 ; BE-NEXT:    sb $3, 4($4)
 ; BE-NEXT:    sb $1, 1($2)
 ; BE-NEXT:    jr $ra

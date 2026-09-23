@@ -4482,10 +4482,11 @@ LegalizerHelper::LegalizeResult LegalizerHelper::lowerStore(GStore &StoreMI) {
     SmallSplitSize = LargeSplitSize = MemSizeInBits / 2;
   }
 
-  // Extend to the next pow-2. If this store was itself the result of lowering,
-  // e.g. an s56 store being broken into s32 + s24, we might have a stored type
-  // that's wider than the stored size.
-  unsigned AnyExtSize = PowerOf2Ceil(MemTy.getSizeInBits());
+  // Extend to the next pow-2 without narrowing an already wider source.
+  // Narrowing here would introduce trunc/extend pairs when the shifts are
+  // legalized, even though the stores already discard the excess bits.
+  unsigned AnyExtSize =
+      PowerOf2Ceil(std::max(MemTy.getSizeInBits(), SrcTy.getSizeInBits()));
   const LLT NewSrcTy = LLT::integer(AnyExtSize);
 
   if (SrcTy.isPointer()) {
