@@ -85,11 +85,7 @@ define i64 @ffs_i64_expansion(i64 %a) {
 ; MIPS32-NEXT:    subu $2, $2, $7
 ; MIPS32-NEXT:    movz $2, $6, $4
 ; MIPS32-NEXT:    addiu $2, $2, 1
-; MIPS32-NEXT:    sltu $6, $2, $3
-; MIPS32-NEXT:    addiu $3, $1, 0
-; MIPS32-NEXT:    addu $3, $3, $6
-; MIPS32-NEXT:    xori $4, $4, 0
-; MIPS32-NEXT:    xori $5, $5, 0
+; MIPS32-NEXT:    sltu $3, $2, $3
 ; MIPS32-NEXT:    or $4, $4, $5
 ; MIPS32-NEXT:    movz $2, $1, $4
 ; MIPS32-NEXT:    movz $3, $1, $4

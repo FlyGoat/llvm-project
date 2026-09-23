@@ -19,11 +19,9 @@ define void @Print_c_N_times(i8 %c, i32 %N) {
 ; MIPS32-NEXT:    move $6, $5
 ; MIPS32-NEXT:    lw $5, 8($fp) # 4-byte Folded Reload
 ; MIPS32-NEXT:    sw $6, 12($fp) # 4-byte Folded Spill
-; MIPS32-NEXT:    ori $2, $zero, 1
 ; MIPS32-NEXT:    ori $1, $zero, 0
 ; MIPS32-NEXT:    sw $1, 16($fp) # 4-byte Folded Spill
 ; MIPS32-NEXT:    addiu $1, $6, 1
-; MIPS32-NEXT:    mul $1, $1, $2
 ; MIPS32-NEXT:    addiu $1, $1, 7
 ; MIPS32-NEXT:    addiu $2, $zero, 65528
 ; MIPS32-NEXT:    and $2, $1, $2

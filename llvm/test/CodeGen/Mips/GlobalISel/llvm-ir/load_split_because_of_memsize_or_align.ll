@@ -199,53 +199,38 @@ entry:
 define i64 @load5align1(ptr %S) {
 ; MIPS32-LABEL: load5align1:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lbu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load5align1:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lbu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lbu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load5align1:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    lbu $3, 4($2)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 8
-; MIPS32-BE-NEXT:    sll $1, $1, 8
-; MIPS32-BE-NEXT:    srl $4, $4, 24
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lbu $3, 4($4)
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $2, 24
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load5align1:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lbu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 8
-; MIPS32R6-BE-NEXT:    sll $1, $1, 8
-; MIPS32R6-BE-NEXT:    srl $4, $4, 24
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 8
+; MIPS32R6-BE-NEXT:    srl $2, $2, 24
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i40, ptr %S, align 1
@@ -256,53 +241,38 @@ entry:
 define i64 @load5align2(ptr %S) {
 ; MIPS32-LABEL: load5align2:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lbu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load5align2:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lbu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lbu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load5align2:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    lbu $3, 4($2)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 8
-; MIPS32-BE-NEXT:    sll $1, $1, 8
-; MIPS32-BE-NEXT:    srl $4, $4, 24
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lbu $3, 4($4)
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $2, 24
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load5align2:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lbu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 8
-; MIPS32R6-BE-NEXT:    sll $1, $1, 8
-; MIPS32R6-BE-NEXT:    srl $4, $4, 24
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 8
+; MIPS32R6-BE-NEXT:    srl $2, $2, 24
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i40, ptr %S, align 2
@@ -313,48 +283,34 @@ entry:
 define i64 @load5align4(ptr %S) {
 ; MIPS32-LABEL: load5align4:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lbu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load5align4:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lbu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lbu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load5align4:
 ; MIPS32-BE:       # %bb.0: # %entry
 ; MIPS32-BE-NEXT:    lbu $3, 4($4)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 8
-; MIPS32-BE-NEXT:    sll $1, $1, 8
-; MIPS32-BE-NEXT:    srl $4, $4, 24
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $2, 24
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load5align4:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lbu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 8
-; MIPS32R6-BE-NEXT:    sll $1, $1, 8
-; MIPS32R6-BE-NEXT:    srl $4, $4, 24
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 8
+; MIPS32R6-BE-NEXT:    srl $2, $2, 24
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i40, ptr %S, align 4
@@ -365,48 +321,34 @@ entry:
 define i64 @load5align8(ptr %S) {
 ; MIPS32-LABEL: load5align8:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lbu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load5align8:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lbu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lbu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load5align8:
 ; MIPS32-BE:       # %bb.0: # %entry
 ; MIPS32-BE-NEXT:    lbu $3, 4($4)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 8
-; MIPS32-BE-NEXT:    sll $1, $1, 8
-; MIPS32-BE-NEXT:    srl $4, $4, 24
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 8
+; MIPS32-BE-NEXT:    srl $2, $2, 24
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load5align8:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lbu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 8
-; MIPS32R6-BE-NEXT:    sll $1, $1, 8
-; MIPS32R6-BE-NEXT:    srl $4, $4, 24
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 8
+; MIPS32R6-BE-NEXT:    srl $2, $2, 24
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i40, ptr %S, align 8
@@ -417,63 +359,44 @@ entry:
 define i64 @load6align1(ptr %S) {
 ; MIPS32-LABEL: load6align1:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lbu $4, 4($4)
-; MIPS32-NEXT:    lbu $1, 1($1)
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 5($4)
 ; MIPS32-NEXT:    sll $1, $1, 8
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    or $3, $1, $3
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load6align1:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lhu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load6align1:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    ori $1, $zero, 4
-; MIPS32-BE-NEXT:    addu $1, $2, $1
-; MIPS32-BE-NEXT:    lbu $3, 1($1)
-; MIPS32-BE-NEXT:    lbu $1, 4($2)
+; MIPS32-BE-NEXT:    lbu $2, 5($4)
+; MIPS32-BE-NEXT:    lbu $1, 4($4)
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
+; MIPS32-BE-NEXT:    or $3, $1, $2
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 16
+; MIPS32-BE-NEXT:    srl $2, $2, 16
 ; MIPS32-BE-NEXT:    or $3, $1, $3
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 16
-; MIPS32-BE-NEXT:    sll $1, $1, 16
-; MIPS32-BE-NEXT:    srl $4, $4, 16
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load6align1:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lhu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 16
-; MIPS32R6-BE-NEXT:    sll $1, $1, 16
-; MIPS32R6-BE-NEXT:    srl $4, $4, 16
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 16
+; MIPS32R6-BE-NEXT:    srl $2, $2, 16
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i48, ptr %S, align 1
@@ -484,53 +407,38 @@ entry:
 define i64 @load6align2(ptr %S) {
 ; MIPS32-LABEL: load6align2:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lhu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load6align2:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lhu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load6align2:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    lhu $3, 4($2)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 16
-; MIPS32-BE-NEXT:    sll $1, $1, 16
-; MIPS32-BE-NEXT:    srl $4, $4, 16
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lhu $3, 4($4)
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 16
+; MIPS32-BE-NEXT:    srl $2, $2, 16
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load6align2:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lhu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 16
-; MIPS32R6-BE-NEXT:    sll $1, $1, 16
-; MIPS32R6-BE-NEXT:    srl $4, $4, 16
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 16
+; MIPS32R6-BE-NEXT:    srl $2, $2, 16
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i48, ptr %S, align 2
@@ -541,48 +449,34 @@ entry:
 define i64 @load6align4(ptr %S) {
 ; MIPS32-LABEL: load6align4:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lhu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load6align4:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lhu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load6align4:
 ; MIPS32-BE:       # %bb.0: # %entry
 ; MIPS32-BE-NEXT:    lhu $3, 4($4)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 16
-; MIPS32-BE-NEXT:    sll $1, $1, 16
-; MIPS32-BE-NEXT:    srl $4, $4, 16
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 16
+; MIPS32-BE-NEXT:    srl $2, $2, 16
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load6align4:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lhu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 16
-; MIPS32R6-BE-NEXT:    sll $1, $1, 16
-; MIPS32R6-BE-NEXT:    srl $4, $4, 16
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 16
+; MIPS32R6-BE-NEXT:    srl $2, $2, 16
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i48, ptr %S, align 4
@@ -593,48 +487,34 @@ entry:
 define i64 @load6align8(ptr %S) {
 ; MIPS32-LABEL: load6align8:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    lhu $1, 4($4)
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load6align8:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    lhu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load6align8:
 ; MIPS32-BE:       # %bb.0: # %entry
 ; MIPS32-BE-NEXT:    lhu $3, 4($4)
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 16
-; MIPS32-BE-NEXT:    sll $1, $1, 16
-; MIPS32-BE-NEXT:    srl $4, $4, 16
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 16
+; MIPS32-BE-NEXT:    srl $2, $2, 16
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load6align8:
 ; MIPS32R6-BE:       # %bb.0: # %entry
 ; MIPS32R6-BE-NEXT:    lhu $3, 4($4)
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 16
-; MIPS32R6-BE-NEXT:    sll $1, $1, 16
-; MIPS32R6-BE-NEXT:    srl $4, $4, 16
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 16
+; MIPS32R6-BE-NEXT:    srl $2, $2, 16
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i48, ptr %S, align 8
@@ -645,79 +525,56 @@ entry:
 define i64 @load7align1(ptr %S) {
 ; MIPS32-LABEL: load7align1:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lbu $5, 4($4)
-; MIPS32-NEXT:    lbu $4, 1($1)
-; MIPS32-NEXT:    sll $4, $4, 8
-; MIPS32-NEXT:    or $4, $4, $5
-; MIPS32-NEXT:    lbu $1, 2($1)
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 5($4)
+; MIPS32-NEXT:    sll $1, $1, 8
+; MIPS32-NEXT:    or $3, $1, $3
+; MIPS32-NEXT:    lbu $1, 6($4)
 ; MIPS32-NEXT:    sll $1, $1, 16
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    or $3, $1, $3
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load7align1:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    ori $1, $zero, 4
-; MIPS32R6-NEXT:    addu $1, $4, $1
-; MIPS32R6-NEXT:    lhu $4, 4($4)
-; MIPS32R6-NEXT:    lbu $1, 2($1)
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
+; MIPS32R6-NEXT:    lbu $1, 6($4)
 ; MIPS32R6-NEXT:    sll $1, $1, 16
-; MIPS32R6-NEXT:    or $1, $1, $4
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    or $3, $1, $3
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load7align1:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    ori $1, $zero, 4
-; MIPS32-BE-NEXT:    addu $1, $2, $1
-; MIPS32-BE-NEXT:    lbu $3, 2($1)
-; MIPS32-BE-NEXT:    lbu $4, 1($1)
-; MIPS32-BE-NEXT:    lbu $1, 4($2)
+; MIPS32-BE-NEXT:    lbu $2, 6($4)
+; MIPS32-BE-NEXT:    lbu $3, 5($4)
+; MIPS32-BE-NEXT:    lbu $1, 4($4)
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
-; MIPS32-BE-NEXT:    or $1, $1, $4
+; MIPS32-BE-NEXT:    or $1, $1, $3
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
+; MIPS32-BE-NEXT:    or $3, $1, $2
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 24
+; MIPS32-BE-NEXT:    srl $2, $2, 8
 ; MIPS32-BE-NEXT:    or $3, $1, $3
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 24
-; MIPS32-BE-NEXT:    sll $1, $1, 24
-; MIPS32-BE-NEXT:    srl $4, $4, 8
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load7align1:
 ; MIPS32R6-BE:       # %bb.0: # %entry
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 4
-; MIPS32R6-BE-NEXT:    addu $1, $4, $1
-; MIPS32R6-BE-NEXT:    lbu $2, 2($1)
+; MIPS32R6-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32R6-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32R6-BE-NEXT:    sll $1, $1, 8
 ; MIPS32R6-BE-NEXT:    or $3, $1, $2
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 24
-; MIPS32R6-BE-NEXT:    sll $1, $1, 24
-; MIPS32R6-BE-NEXT:    srl $4, $4, 8
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 24
+; MIPS32R6-BE-NEXT:    srl $2, $2, 8
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i56, ptr %S, align 1
@@ -728,73 +585,50 @@ entry:
 define i64 @load7align2(ptr %S) {
 ; MIPS32-LABEL: load7align2:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lhu $4, 4($4)
-; MIPS32-NEXT:    lbu $1, 2($1)
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 6($4)
 ; MIPS32-NEXT:    sll $1, $1, 16
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    or $3, $1, $3
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load7align2:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    ori $1, $zero, 4
-; MIPS32R6-NEXT:    addu $1, $4, $1
-; MIPS32R6-NEXT:    lhu $4, 4($4)
-; MIPS32R6-NEXT:    lbu $1, 2($1)
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
+; MIPS32R6-NEXT:    lbu $1, 6($4)
 ; MIPS32R6-NEXT:    sll $1, $1, 16
-; MIPS32R6-NEXT:    or $1, $1, $4
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    or $3, $1, $3
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load7align2:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    move $2, $4
-; MIPS32-BE-NEXT:    ori $1, $zero, 4
-; MIPS32-BE-NEXT:    addu $1, $2, $1
-; MIPS32-BE-NEXT:    lbu $3, 2($1)
-; MIPS32-BE-NEXT:    lhu $1, 4($2)
+; MIPS32-BE-NEXT:    lbu $2, 6($4)
+; MIPS32-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
+; MIPS32-BE-NEXT:    or $3, $1, $2
+; MIPS32-BE-NEXT:    # implicit-def: $v0
+; MIPS32-BE-NEXT:    lwl $2, 0($4)
+; MIPS32-BE-NEXT:    lwr $2, 3($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 24
+; MIPS32-BE-NEXT:    srl $2, $2, 8
 ; MIPS32-BE-NEXT:    or $3, $1, $3
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($2)
-; MIPS32-BE-NEXT:    lwr $4, 3($2)
-; MIPS32-BE-NEXT:    sll $2, $4, 24
-; MIPS32-BE-NEXT:    sll $1, $1, 24
-; MIPS32-BE-NEXT:    srl $4, $4, 8
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load7align2:
 ; MIPS32R6-BE:       # %bb.0: # %entry
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 4
-; MIPS32R6-BE-NEXT:    addu $1, $4, $1
-; MIPS32R6-BE-NEXT:    lbu $2, 2($1)
+; MIPS32R6-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32R6-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32R6-BE-NEXT:    sll $1, $1, 8
 ; MIPS32R6-BE-NEXT:    or $3, $1, $2
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 24
-; MIPS32R6-BE-NEXT:    sll $1, $1, 24
-; MIPS32R6-BE-NEXT:    srl $4, $4, 8
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 24
+; MIPS32R6-BE-NEXT:    srl $2, $2, 8
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i56, ptr %S, align 2
@@ -805,68 +639,46 @@ entry:
 define i64 @load7align4(ptr %S) {
 ; MIPS32-LABEL: load7align4:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lhu $4, 4($4)
-; MIPS32-NEXT:    lbu $1, 2($1)
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 6($4)
 ; MIPS32-NEXT:    sll $1, $1, 16
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    or $3, $1, $3
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load7align4:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    ori $1, $zero, 4
-; MIPS32R6-NEXT:    addu $1, $4, $1
-; MIPS32R6-NEXT:    lhu $4, 4($4)
-; MIPS32R6-NEXT:    lbu $1, 2($1)
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
+; MIPS32R6-NEXT:    lbu $1, 6($4)
 ; MIPS32R6-NEXT:    sll $1, $1, 16
-; MIPS32R6-NEXT:    or $1, $1, $4
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    or $3, $1, $3
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load7align4:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    ori $1, $zero, 4
-; MIPS32-BE-NEXT:    addu $1, $4, $1
-; MIPS32-BE-NEXT:    lbu $2, 2($1)
+; MIPS32-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
 ; MIPS32-BE-NEXT:    or $3, $1, $2
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 24
-; MIPS32-BE-NEXT:    sll $1, $1, 24
-; MIPS32-BE-NEXT:    srl $4, $4, 8
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 24
+; MIPS32-BE-NEXT:    srl $2, $2, 8
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load7align4:
 ; MIPS32R6-BE:       # %bb.0: # %entry
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 4
-; MIPS32R6-BE-NEXT:    addu $1, $4, $1
-; MIPS32R6-BE-NEXT:    lbu $2, 2($1)
+; MIPS32R6-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32R6-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32R6-BE-NEXT:    sll $1, $1, 8
 ; MIPS32R6-BE-NEXT:    or $3, $1, $2
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 24
-; MIPS32R6-BE-NEXT:    sll $1, $1, 24
-; MIPS32R6-BE-NEXT:    srl $4, $4, 8
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 24
+; MIPS32R6-BE-NEXT:    srl $2, $2, 8
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i56, ptr %S, align 4
@@ -877,68 +689,46 @@ entry:
 define i64 @load7align8(ptr %S) {
 ; MIPS32-LABEL: load7align8:
 ; MIPS32:       # %bb.0: # %entry
-; MIPS32-NEXT:    lw $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lhu $4, 4($4)
-; MIPS32-NEXT:    lbu $1, 2($1)
+; MIPS32-NEXT:    lw $2, 0($4)
+; MIPS32-NEXT:    lhu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 6($4)
 ; MIPS32-NEXT:    sll $1, $1, 16
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $3, $1, 0
+; MIPS32-NEXT:    or $3, $1, $3
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load7align8:
 ; MIPS32R6:       # %bb.0: # %entry
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
-; MIPS32R6-NEXT:    ori $1, $zero, 4
-; MIPS32R6-NEXT:    addu $1, $4, $1
-; MIPS32R6-NEXT:    lhu $4, 4($4)
-; MIPS32R6-NEXT:    lbu $1, 2($1)
+; MIPS32R6-NEXT:    lw $2, 0($4)
+; MIPS32R6-NEXT:    lhu $3, 4($4)
+; MIPS32R6-NEXT:    lbu $1, 6($4)
 ; MIPS32R6-NEXT:    sll $1, $1, 16
-; MIPS32R6-NEXT:    or $1, $1, $4
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $3, $1, 0
+; MIPS32R6-NEXT:    or $3, $1, $3
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load7align8:
 ; MIPS32-BE:       # %bb.0: # %entry
-; MIPS32-BE-NEXT:    ori $1, $zero, 4
-; MIPS32-BE-NEXT:    addu $1, $4, $1
-; MIPS32-BE-NEXT:    lbu $2, 2($1)
+; MIPS32-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32-BE-NEXT:    sll $1, $1, 8
 ; MIPS32-BE-NEXT:    or $3, $1, $2
-; MIPS32-BE-NEXT:    ori $1, $zero, 0
-; MIPS32-BE-NEXT:    lw $4, 0($4)
-; MIPS32-BE-NEXT:    sll $2, $4, 24
-; MIPS32-BE-NEXT:    sll $1, $1, 24
-; MIPS32-BE-NEXT:    srl $4, $4, 8
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    ori $2, $1, 0
+; MIPS32-BE-NEXT:    lw $2, 0($4)
+; MIPS32-BE-NEXT:    sll $1, $2, 24
+; MIPS32-BE-NEXT:    srl $2, $2, 8
+; MIPS32-BE-NEXT:    or $3, $1, $3
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
 ;
 ; MIPS32R6-BE-LABEL: load7align8:
 ; MIPS32R6-BE:       # %bb.0: # %entry
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 4
-; MIPS32R6-BE-NEXT:    addu $1, $4, $1
-; MIPS32R6-BE-NEXT:    lbu $2, 2($1)
+; MIPS32R6-BE-NEXT:    lbu $2, 6($4)
 ; MIPS32R6-BE-NEXT:    lhu $1, 4($4)
 ; MIPS32R6-BE-NEXT:    sll $1, $1, 8
 ; MIPS32R6-BE-NEXT:    or $3, $1, $2
-; MIPS32R6-BE-NEXT:    ori $1, $zero, 0
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    sll $2, $4, 24
-; MIPS32R6-BE-NEXT:    sll $1, $1, 24
-; MIPS32R6-BE-NEXT:    srl $4, $4, 8
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $3, $2, $3
-; MIPS32R6-BE-NEXT:    ori $2, $1, 0
+; MIPS32R6-BE-NEXT:    lw $2, 0($4)
+; MIPS32R6-BE-NEXT:    sll $1, $2, 24
+; MIPS32R6-BE-NEXT:    srl $2, $2, 8
+; MIPS32R6-BE-NEXT:    or $3, $1, $3
 ; MIPS32R6-BE-NEXT:    jrc $ra
 entry:
   %bf.load = load i56, ptr %S, align 8
@@ -1466,57 +1256,36 @@ define i32 @load20bits_align1(ptr %p) {
 define i64 @load42bits_align1(ptr %p) {
 ; MIPS32-LABEL: load42bits_align1:
 ; MIPS32:       # %bb.0:
-; MIPS32-NEXT:    # implicit-def: $v1
-; MIPS32-NEXT:    lwl $3, 3($4)
-; MIPS32-NEXT:    lwr $3, 0($4)
-; MIPS32-NEXT:    ori $2, $zero, 0
-; MIPS32-NEXT:    ori $1, $zero, 4
-; MIPS32-NEXT:    addu $1, $4, $1
-; MIPS32-NEXT:    lbu $4, 4($4)
-; MIPS32-NEXT:    lbu $1, 1($1)
+; MIPS32-NEXT:    # implicit-def: $v0
+; MIPS32-NEXT:    lwl $2, 3($4)
+; MIPS32-NEXT:    lwr $2, 0($4)
+; MIPS32-NEXT:    lbu $3, 4($4)
+; MIPS32-NEXT:    lbu $1, 5($4)
 ; MIPS32-NEXT:    sll $1, $1, 8
-; MIPS32-NEXT:    or $1, $1, $4
-; MIPS32-NEXT:    or $2, $2, $3
-; MIPS32-NEXT:    ori $1, $1, 0
-; MIPS32-NEXT:    addiu $3, $zero, 65535
-; MIPS32-NEXT:    and $2, $2, $3
+; MIPS32-NEXT:    or $1, $1, $3
 ; MIPS32-NEXT:    andi $3, $1, 1023
 ; MIPS32-NEXT:    jr $ra
 ; MIPS32-NEXT:    nop
 ;
 ; MIPS32R6-LABEL: load42bits_align1:
 ; MIPS32R6:       # %bb.0:
-; MIPS32R6-NEXT:    lw $3, 0($4)
-; MIPS32R6-NEXT:    ori $2, $zero, 0
+; MIPS32R6-NEXT:    lw $2, 0($4)
 ; MIPS32R6-NEXT:    lhu $1, 4($4)
-; MIPS32R6-NEXT:    or $2, $2, $3
-; MIPS32R6-NEXT:    ori $1, $1, 0
-; MIPS32R6-NEXT:    addiu $3, $zero, 65535
-; MIPS32R6-NEXT:    and $2, $2, $3
 ; MIPS32R6-NEXT:    andi $3, $1, 1023
 ; MIPS32R6-NEXT:    jrc $ra
 ;
 ; MIPS32-BE-LABEL: load42bits_align1:
 ; MIPS32-BE:       # %bb.0:
-; MIPS32-BE-NEXT:    move $1, $4
-; MIPS32-BE-NEXT:    ori $2, $zero, 4
-; MIPS32-BE-NEXT:    addu $2, $1, $2
-; MIPS32-BE-NEXT:    lbu $3, 1($2)
-; MIPS32-BE-NEXT:    lbu $2, 4($1)
-; MIPS32-BE-NEXT:    sll $2, $2, 8
-; MIPS32-BE-NEXT:    or $3, $2, $3
-; MIPS32-BE-NEXT:    # implicit-def: $a0
-; MIPS32-BE-NEXT:    lwl $4, 0($1)
-; MIPS32-BE-NEXT:    lwr $4, 3($1)
+; MIPS32-BE-NEXT:    lbu $2, 5($4)
+; MIPS32-BE-NEXT:    lbu $1, 4($4)
+; MIPS32-BE-NEXT:    sll $1, $1, 8
+; MIPS32-BE-NEXT:    or $3, $1, $2
 ; MIPS32-BE-NEXT:    # implicit-def: $at
-; MIPS32-BE-NEXT:    sll $2, $4, 16
-; MIPS32-BE-NEXT:    sll $1, $1, 16
-; MIPS32-BE-NEXT:    srl $4, $4, 16
-; MIPS32-BE-NEXT:    or $1, $1, $4
-; MIPS32-BE-NEXT:    or $2, $2, $3
-; MIPS32-BE-NEXT:    ori $1, $1, 0
-; MIPS32-BE-NEXT:    addiu $3, $zero, 65535
-; MIPS32-BE-NEXT:    and $3, $2, $3
+; MIPS32-BE-NEXT:    lwl $1, 0($4)
+; MIPS32-BE-NEXT:    lwr $1, 3($4)
+; MIPS32-BE-NEXT:    sll $2, $1, 16
+; MIPS32-BE-NEXT:    srl $1, $1, 16
+; MIPS32-BE-NEXT:    or $3, $2, $3
 ; MIPS32-BE-NEXT:    andi $2, $1, 1023
 ; MIPS32-BE-NEXT:    jr $ra
 ; MIPS32-BE-NEXT:    nop
@@ -1524,16 +1293,10 @@ define i64 @load42bits_align1(ptr %p) {
 ; MIPS32R6-BE-LABEL: load42bits_align1:
 ; MIPS32R6-BE:       # %bb.0:
 ; MIPS32R6-BE-NEXT:    lhu $3, 4($4)
-; MIPS32R6-BE-NEXT:    lw $4, 0($4)
-; MIPS32R6-BE-NEXT:    # implicit-def: $at
-; MIPS32R6-BE-NEXT:    sll $2, $4, 16
-; MIPS32R6-BE-NEXT:    sll $1, $1, 16
-; MIPS32R6-BE-NEXT:    srl $4, $4, 16
-; MIPS32R6-BE-NEXT:    or $1, $1, $4
-; MIPS32R6-BE-NEXT:    or $2, $2, $3
-; MIPS32R6-BE-NEXT:    ori $1, $1, 0
-; MIPS32R6-BE-NEXT:    addiu $3, $zero, 65535
-; MIPS32R6-BE-NEXT:    and $3, $2, $3
+; MIPS32R6-BE-NEXT:    lw $1, 0($4)
+; MIPS32R6-BE-NEXT:    sll $2, $1, 16
+; MIPS32R6-BE-NEXT:    srl $1, $1, 16
+; MIPS32R6-BE-NEXT:    or $3, $2, $3
 ; MIPS32R6-BE-NEXT:    andi $2, $1, 1023
 ; MIPS32R6-BE-NEXT:    jrc $ra
   %v = load i42, ptr %p, align 1
