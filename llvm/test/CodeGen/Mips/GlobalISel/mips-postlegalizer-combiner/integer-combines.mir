@@ -331,6 +331,30 @@ body: |
     RetRA implicit $v0
 ...
 ---
+name: icmp_bool
+legalized: true
+tracksRegLiveness: true
+body: |
+  bb.0:
+    liveins: $a0, $a1
+    ; CHECK-LABEL: name: icmp_bool
+    ; CHECK: liveins: $a0, $a1
+    ; CHECK-NEXT: {{  $}}
+    ; CHECK-NEXT: %x:_(s32) = COPY $a0
+    ; CHECK-NEXT: %y:_(s32) = COPY $a1
+    ; CHECK-NEXT: %a:_(s32) = G_ICMP intpred(ult), %x(s32), %y
+    ; CHECK-NEXT: %r:_(s32) = COPY %a(s32)
+    ; CHECK-NEXT: $v0 = COPY %r(s32)
+    ; CHECK-NEXT: RetRA implicit $v0
+    %x:_(s32) = COPY $a0
+    %y:_(s32) = COPY $a1
+    %c:_(s32) = G_CONSTANT i32 0
+    %a:_(s32) = G_ICMP intpred(ult), %x, %y
+    %r:_(s32) = G_ICMP intpred(ne), %a, %c
+    $v0 = COPY %r(s32)
+    RetRA implicit $v0
+...
+---
 name: and_masks
 legalized: true
 tracksRegLiveness: true

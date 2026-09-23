@@ -4665,7 +4665,9 @@ bool CombinerHelper::matchICmpToLHSKnownBits(
   unsigned Op = TargetOpcode::COPY;
   if (DstSize != LHSSize)
     Op = DstSize < LHSSize ? TargetOpcode::G_TRUNC : TargetOpcode::G_ZEXT;
-  if (!isLegalOrBeforeLegalizer({Op, {DstTy, LHSTy}}))
+  // COPY is not a generic opcode and has no legalizer rules.
+  if (Op != TargetOpcode::COPY &&
+      !isLegalOrBeforeLegalizer({Op, {DstTy, LHSTy}}))
     return false;
   MatchInfo = [=](MachineIRBuilder &B) { B.buildInstr(Op, {Dst}, {LHS}); };
   return true;
