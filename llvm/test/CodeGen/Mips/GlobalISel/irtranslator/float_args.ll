@@ -2,6 +2,8 @@
 
 ; RUN: llc -O0 -mtriple=mipsel-linux-gnu -global-isel -stop-after=irtranslator -verify-machineinstrs %s -o - | FileCheck %s -check-prefixes=FP32
 ; RUN: llc -O0 -mtriple=mipsel-linux-gnu -mattr=+fp64,+mips32r2 -global-isel -stop-after=irtranslator -verify-machineinstrs %s -o - | FileCheck %s -check-prefixes=FP64
+; RUN: llc -O0 -mtriple=mips-linux-gnu -global-isel -stop-after=irtranslator -verify-machineinstrs %s -o - | FileCheck %s -check-prefixes=FP32-BE
+; RUN: llc -O0 -mtriple=mips-linux-gnu -mattr=+fp64,+mips32r2 -global-isel -stop-after=irtranslator -verify-machineinstrs %s -o - | FileCheck %s -check-prefixes=FP64-BE
 
 define float @float_in_fpr(float %a, float %b) {
   ; FP32-LABEL: name: float_in_fpr
@@ -21,6 +23,24 @@ define float @float_in_fpr(float %a, float %b) {
   ; FP64-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $f14
   ; FP64-NEXT:   $f0 = COPY [[COPY1]](s32)
   ; FP64-NEXT:   RetRA implicit $f0
+  ;
+  ; FP32-BE-LABEL: name: float_in_fpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $f12, $f14
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $f12
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $f14
+  ; FP32-BE-NEXT:   $f0 = COPY [[COPY1]](s32)
+  ; FP32-BE-NEXT:   RetRA implicit $f0
+  ;
+  ; FP64-BE-LABEL: name: float_in_fpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $f12, $f14
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $f12
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $f14
+  ; FP64-BE-NEXT:   $f0 = COPY [[COPY1]](s32)
+  ; FP64-BE-NEXT:   RetRA implicit $f0
 entry:
   ret float %b
 }
@@ -43,6 +63,24 @@ define double @double_in_fpr(double %a, double %b) {
   ; FP64-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d14_64
   ; FP64-NEXT:   $d0_64 = COPY [[COPY1]](s64)
   ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: double_in_fpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $d6, $d7
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d6
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d7
+  ; FP32-BE-NEXT:   $d0 = COPY [[COPY1]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: double_in_fpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $d12_64, $d14_64
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d12_64
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d14_64
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[COPY1]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
 entry:
   ret double %b
 }
@@ -65,6 +103,24 @@ define float @float_in_gpr(i32 %a, float %b) {
   ; FP64-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a1
   ; FP64-NEXT:   $f0 = COPY [[COPY1]](s32)
   ; FP64-NEXT:   RetRA implicit $f0
+  ;
+  ; FP32-BE-LABEL: name: float_in_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $a0, $a1
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a1
+  ; FP32-BE-NEXT:   $f0 = COPY [[COPY1]](s32)
+  ; FP32-BE-NEXT:   RetRA implicit $f0
+  ;
+  ; FP64-BE-LABEL: name: float_in_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $a0, $a1
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a1
+  ; FP64-BE-NEXT:   $f0 = COPY [[COPY1]](s32)
+  ; FP64-BE-NEXT:   RetRA implicit $f0
 entry:
   ret float %b
 }
@@ -91,6 +147,28 @@ define double @double_in_gpr(i32 %a, double %b) {
   ; FP64-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY1]](s32), [[COPY2]](s32)
   ; FP64-NEXT:   $d0_64 = COPY [[MV]](s64)
   ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: double_in_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP32-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP32-BE-NEXT:   $d0 = COPY [[MV]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: double_in_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP64-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[MV]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
 entry:
   ret double %b
 }
@@ -121,6 +199,32 @@ define double @two_double_in_gpr(i32 %a, double %b, double %c) {
   ; FP64-NEXT:   [[LOAD:%[0-9]+]]:_(s64) = G_LOAD [[FRAME_INDEX]](p0) :: (load (s64) from %fixed-stack.0)
   ; FP64-NEXT:   $d0_64 = COPY [[LOAD]](s64)
   ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: two_double_in_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP32-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP32-BE-NEXT:   [[FRAME_INDEX:%[0-9]+]]:_(p0) = G_FRAME_INDEX %fixed-stack.0
+  ; FP32-BE-NEXT:   [[LOAD:%[0-9]+]]:_(s64) = G_LOAD [[FRAME_INDEX]](p0) :: (load (s64) from %fixed-stack.0)
+  ; FP32-BE-NEXT:   $d0 = COPY [[LOAD]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: two_double_in_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP64-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP64-BE-NEXT:   [[FRAME_INDEX:%[0-9]+]]:_(p0) = G_FRAME_INDEX %fixed-stack.0
+  ; FP64-BE-NEXT:   [[LOAD:%[0-9]+]]:_(s64) = G_LOAD [[FRAME_INDEX]](p0) :: (load (s64) from %fixed-stack.0)
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[LOAD]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
 entry:
   ret double %c
 }
@@ -155,6 +259,36 @@ define float @call_float_in_fpr(float %a, float %b) {
   ; FP64-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
   ; FP64-NEXT:   $f0 = COPY [[COPY2]](s32)
   ; FP64-NEXT:   RetRA implicit $f0
+  ;
+  ; FP32-BE-LABEL: name: call_float_in_fpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $f12, $f14
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $f12
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $f14
+  ; FP32-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $f12 = COPY [[COPY]](s32)
+  ; FP32-BE-NEXT:   $f14 = COPY [[COPY1]](s32)
+  ; FP32-BE-NEXT:   JAL @float_in_fpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $f12, implicit $f14, implicit-def $f0
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $f0
+  ; FP32-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $f0 = COPY [[COPY2]](s32)
+  ; FP32-BE-NEXT:   RetRA implicit $f0
+  ;
+  ; FP64-BE-LABEL: name: call_float_in_fpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $f12, $f14
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $f12
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $f14
+  ; FP64-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $f12 = COPY [[COPY]](s32)
+  ; FP64-BE-NEXT:   $f14 = COPY [[COPY1]](s32)
+  ; FP64-BE-NEXT:   JAL @float_in_fpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $f12, implicit $f14, implicit-def $f0
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $f0
+  ; FP64-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $f0 = COPY [[COPY2]](s32)
+  ; FP64-BE-NEXT:   RetRA implicit $f0
 entry:
   %call = call float @float_in_fpr(float %a, float %b)
   ret float %call
@@ -190,6 +324,36 @@ define double @call_double_in_fpr(double %a, double %b) {
   ; FP64-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
   ; FP64-NEXT:   $d0_64 = COPY [[COPY2]](s64)
   ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: call_double_in_fpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $d6, $d7
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d6
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d7
+  ; FP32-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $d6 = COPY [[COPY]](s64)
+  ; FP32-BE-NEXT:   $d7 = COPY [[COPY1]](s64)
+  ; FP32-BE-NEXT:   JAL @double_in_fpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $d6, implicit $d7, implicit-def $d0
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s64) = COPY $d0
+  ; FP32-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $d0 = COPY [[COPY2]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: call_double_in_fpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $d12_64, $d14_64
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d12_64
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d14_64
+  ; FP64-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $d12_64 = COPY [[COPY]](s64)
+  ; FP64-BE-NEXT:   $d14_64 = COPY [[COPY1]](s64)
+  ; FP64-BE-NEXT:   JAL @double_in_fpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $d12_64, implicit $d14_64, implicit-def $d0_64
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s64) = COPY $d0_64
+  ; FP64-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[COPY2]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
 entry:
   %call = call double @double_in_fpr(double %a, double %b)
   ret double %call
@@ -225,6 +389,36 @@ define float @call_float_in_gpr(i32 %a, float %b) {
   ; FP64-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
   ; FP64-NEXT:   $f0 = COPY [[COPY2]](s32)
   ; FP64-NEXT:   RetRA implicit $f0
+  ;
+  ; FP32-BE-LABEL: name: call_float_in_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $a0, $a1
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a1
+  ; FP32-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $a0 = COPY [[COPY]](s32)
+  ; FP32-BE-NEXT:   $a1 = COPY [[COPY1]](s32)
+  ; FP32-BE-NEXT:   JAL @float_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a0, implicit $a1, implicit-def $f0
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $f0
+  ; FP32-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $f0 = COPY [[COPY2]](s32)
+  ; FP32-BE-NEXT:   RetRA implicit $f0
+  ;
+  ; FP64-BE-LABEL: name: call_float_in_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $a0, $a1
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a1
+  ; FP64-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $a0 = COPY [[COPY]](s32)
+  ; FP64-BE-NEXT:   $a1 = COPY [[COPY1]](s32)
+  ; FP64-BE-NEXT:   JAL @float_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a0, implicit $a1, implicit-def $f0
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $f0
+  ; FP64-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $f0 = COPY [[COPY2]](s32)
+  ; FP64-BE-NEXT:   RetRA implicit $f0
 entry:
   %call = call float @float_in_gpr(i32 %a, float %b)
   ret float %call
@@ -245,7 +439,7 @@ define double @call_double_in_gpr(i32 %a, double %b) {
   ; FP32-NEXT:   $a0 = COPY [[COPY]](s32)
   ; FP32-NEXT:   $a2 = COPY [[UV]](s32)
   ; FP32-NEXT:   $a3 = COPY [[UV1]](s32)
-  ; FP32-NEXT:   JAL @double_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a0, implicit-def $d0
+  ; FP32-NEXT:   JAL @double_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0
   ; FP32-NEXT:   [[COPY3:%[0-9]+]]:_(s64) = COPY $d0
   ; FP32-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
   ; FP32-NEXT:   $d0 = COPY [[COPY3]](s64)
@@ -264,12 +458,124 @@ define double @call_double_in_gpr(i32 %a, double %b) {
   ; FP64-NEXT:   $a0 = COPY [[COPY]](s32)
   ; FP64-NEXT:   $a2 = COPY [[UV]](s32)
   ; FP64-NEXT:   $a3 = COPY [[UV1]](s32)
-  ; FP64-NEXT:   JAL @double_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a0, implicit-def $d0_64
+  ; FP64-NEXT:   JAL @double_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0_64
   ; FP64-NEXT:   [[COPY3:%[0-9]+]]:_(s64) = COPY $d0_64
   ; FP64-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
   ; FP64-NEXT:   $d0_64 = COPY [[COPY3]](s64)
   ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: call_double_in_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP32-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP32-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP32-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[MV]](s64)
+  ; FP32-BE-NEXT:   $a0 = COPY [[COPY]](s32)
+  ; FP32-BE-NEXT:   $a2 = COPY [[UV1]](s32)
+  ; FP32-BE-NEXT:   $a3 = COPY [[UV]](s32)
+  ; FP32-BE-NEXT:   JAL @double_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0
+  ; FP32-BE-NEXT:   [[COPY3:%[0-9]+]]:_(s64) = COPY $d0
+  ; FP32-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $d0 = COPY [[COPY3]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: call_double_in_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $a0, $a2, $a3
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s32) = COPY $a0
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s32) = COPY $a2
+  ; FP64-BE-NEXT:   [[COPY2:%[0-9]+]]:_(s32) = COPY $a3
+  ; FP64-BE-NEXT:   [[MV:%[0-9]+]]:_(s64) = G_MERGE_VALUES [[COPY2]](s32), [[COPY1]](s32)
+  ; FP64-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[MV]](s64)
+  ; FP64-BE-NEXT:   $a0 = COPY [[COPY]](s32)
+  ; FP64-BE-NEXT:   $a2 = COPY [[UV1]](s32)
+  ; FP64-BE-NEXT:   $a3 = COPY [[UV]](s32)
+  ; FP64-BE-NEXT:   JAL @double_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0_64
+  ; FP64-BE-NEXT:   [[COPY3:%[0-9]+]]:_(s64) = COPY $d0_64
+  ; FP64-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[COPY3]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
 entry:
   %call = call double @double_in_gpr(i32 %a, double %b)
   ret double %call
+}
+
+; Both halves of the outgoing double must be implicit uses of the call.
+define double @call_double_fpr_to_gpr(double %a) {
+  ; FP32-LABEL: name: call_double_fpr_to_gpr
+  ; FP32: bb.1.entry:
+  ; FP32-NEXT:   liveins: $d6
+  ; FP32-NEXT: {{  $}}
+  ; FP32-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d6
+  ; FP32-NEXT:   [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+  ; FP32-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[COPY]](s64)
+  ; FP32-NEXT:   $a0 = COPY [[C]](s32)
+  ; FP32-NEXT:   $a2 = COPY [[UV]](s32)
+  ; FP32-NEXT:   $a3 = COPY [[UV1]](s32)
+  ; FP32-NEXT:   JAL @double_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0
+  ; FP32-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d0
+  ; FP32-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-NEXT:   $d0 = COPY [[COPY1]](s64)
+  ; FP32-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-LABEL: name: call_double_fpr_to_gpr
+  ; FP64: bb.1.entry:
+  ; FP64-NEXT:   liveins: $d12_64
+  ; FP64-NEXT: {{  $}}
+  ; FP64-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d12_64
+  ; FP64-NEXT:   [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+  ; FP64-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[COPY]](s64)
+  ; FP64-NEXT:   $a0 = COPY [[C]](s32)
+  ; FP64-NEXT:   $a2 = COPY [[UV]](s32)
+  ; FP64-NEXT:   $a3 = COPY [[UV1]](s32)
+  ; FP64-NEXT:   JAL @double_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0_64
+  ; FP64-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d0_64
+  ; FP64-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-NEXT:   $d0_64 = COPY [[COPY1]](s64)
+  ; FP64-NEXT:   RetRA implicit $d0_64
+  ;
+  ; FP32-BE-LABEL: name: call_double_fpr_to_gpr
+  ; FP32-BE: bb.1.entry:
+  ; FP32-BE-NEXT:   liveins: $d6
+  ; FP32-BE-NEXT: {{  $}}
+  ; FP32-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d6
+  ; FP32-BE-NEXT:   [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+  ; FP32-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[COPY]](s64)
+  ; FP32-BE-NEXT:   $a0 = COPY [[C]](s32)
+  ; FP32-BE-NEXT:   $a2 = COPY [[UV1]](s32)
+  ; FP32-BE-NEXT:   $a3 = COPY [[UV]](s32)
+  ; FP32-BE-NEXT:   JAL @double_in_gpr, csr_o32, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0
+  ; FP32-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d0
+  ; FP32-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP32-BE-NEXT:   $d0 = COPY [[COPY1]](s64)
+  ; FP32-BE-NEXT:   RetRA implicit $d0
+  ;
+  ; FP64-BE-LABEL: name: call_double_fpr_to_gpr
+  ; FP64-BE: bb.1.entry:
+  ; FP64-BE-NEXT:   liveins: $d12_64
+  ; FP64-BE-NEXT: {{  $}}
+  ; FP64-BE-NEXT:   [[COPY:%[0-9]+]]:_(s64) = COPY $d12_64
+  ; FP64-BE-NEXT:   [[C:%[0-9]+]]:_(s32) = G_CONSTANT i32 1
+  ; FP64-BE-NEXT:   ADJCALLSTACKDOWN 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   [[UV:%[0-9]+]]:_(s32), [[UV1:%[0-9]+]]:_(s32) = G_UNMERGE_VALUES [[COPY]](s64)
+  ; FP64-BE-NEXT:   $a0 = COPY [[C]](s32)
+  ; FP64-BE-NEXT:   $a2 = COPY [[UV1]](s32)
+  ; FP64-BE-NEXT:   $a3 = COPY [[UV]](s32)
+  ; FP64-BE-NEXT:   JAL @double_in_gpr, csr_o32_fp64, implicit-def $ra, implicit-def $sp, implicit $a2, implicit $a3, implicit $a0, implicit-def $d0_64
+  ; FP64-BE-NEXT:   [[COPY1:%[0-9]+]]:_(s64) = COPY $d0_64
+  ; FP64-BE-NEXT:   ADJCALLSTACKUP 16, 0, implicit-def $sp, implicit $sp
+  ; FP64-BE-NEXT:   $d0_64 = COPY [[COPY1]](s64)
+  ; FP64-BE-NEXT:   RetRA implicit $d0_64
+entry:
+  %r = call double @double_in_gpr(i32 1, double %a)
+  ret double %r
 }

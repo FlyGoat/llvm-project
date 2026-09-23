@@ -19,47 +19,6 @@
 
 using namespace llvm;
 
-struct TypesAndMemOps {
-  LLT ValTy;
-  LLT PtrTy;
-  unsigned MemSize;
-  bool SystemSupportsUnalignedAccess;
-};
-
-// Assumes power of 2 memory size. Subtargets that have only naturally-aligned
-// memory access need to perform additional legalization here.
-static bool isUnalignedMemmoryAccess(uint64_t MemSize, uint64_t AlignInBits) {
-  assert(isPowerOf2_64(MemSize) && "Expected power of 2 memory size");
-  assert(isPowerOf2_64(AlignInBits) && "Expected power of 2 align");
-  if (MemSize > AlignInBits)
-    return true;
-  return false;
-}
-
-static bool
-CheckTy0Ty1MemSizeAlign(const LegalityQuery &Query,
-                        std::initializer_list<TypesAndMemOps> SupportedValues) {
-  unsigned QueryMemSize = Query.MMODescrs[0].MemoryTy.getSizeInBits();
-
-  // Non power of two memory access is never legal.
-  if (!isPowerOf2_64(QueryMemSize))
-    return false;
-
-  for (auto &Val : SupportedValues) {
-    if (Val.ValTy != Query.Types[0])
-      continue;
-    if (Val.PtrTy != Query.Types[1])
-      continue;
-    if (Val.MemSize != QueryMemSize)
-      continue;
-    if (!Val.SystemSupportsUnalignedAccess &&
-        isUnalignedMemmoryAccess(QueryMemSize, Query.MMODescrs[0].AlignInBits))
-      return false;
-    return true;
-  }
-  return false;
-}
-
 static bool CheckTyN(unsigned N, const LegalityQuery &Query,
                      std::initializer_list<LLT> SupportedValues) {
   return llvm::is_contained(SupportedValues, Query.Types[N]);
@@ -96,58 +55,42 @@ MipsLegalizerInfo::MipsLegalizerInfo(const MipsSubtarget &ST) {
       .legalFor({s32})
       .maxScalar(0, s32);
 
-  // MIPS32r6 does not have alignment restrictions for memory access.
-  // For MIPS32r5 and older memory access must be naturally-aligned i.e. aligned
-  // to at least a multiple of its own size. There is however a two instruction
-  // combination that performs 4 byte unaligned access (lwr/lwl and swl/swr)
-  // therefore 4 byte load and store are legal and will use NoAlignRequirements.
-  bool NoAlignRequirements = true;
-
-  getActionDefinitionsBuilder({G_LOAD, G_STORE})
-      .legalIf([=, &ST](const LegalityQuery &Query) {
-        if (CheckTy0Ty1MemSizeAlign(
-                Query, {{s32, p0, 8, NoAlignRequirements},
-                        {s32, p0, 16, ST.systemSupportsUnalignedAccess()},
-                        {s32, p0, 32, NoAlignRequirements},
-                        {p0, p0, 32, NoAlignRequirements},
-                        {s64, p0, 64, ST.systemSupportsUnalignedAccess()}}))
-          return true;
-        if (ST.hasMSA() && CheckTy0Ty1MemSizeAlign(
-                               Query, {{v16s8, p0, 128, NoAlignRequirements},
-                                       {v8s16, p0, 128, NoAlignRequirements},
-                                       {v4s32, p0, 128, NoAlignRequirements},
-                                       {v2s64, p0, 128, NoAlignRequirements}}))
-          return true;
-        return false;
-      })
-      // Custom lower scalar memory access, up to 8 bytes, for:
-      // - non-power-of-2 MemSizes
-      // - unaligned 2 or 8 byte MemSizes for MIPS32r5 and older
-      .customIf([=, &ST](const LegalityQuery &Query) {
-        if (!Query.Types[0].isScalar() || Query.Types[1] != p0 ||
-            Query.Types[0] == s1)
-          return false;
-
-        unsigned Size = Query.Types[0].getSizeInBits();
-        unsigned QueryMemSize = Query.MMODescrs[0].MemoryTy.getSizeInBits();
-        assert(QueryMemSize <= Size && "Scalar can't hold MemSize");
-
-        if (Size > 64 || QueryMemSize > 64)
-          return false;
-
-        if (!isPowerOf2_64(Query.MMODescrs[0].MemoryTy.getSizeInBits()))
-          return true;
-
-        if (!ST.systemSupportsUnalignedAccess() &&
-            isUnalignedMemmoryAccess(QueryMemSize,
-                                     Query.MMODescrs[0].AlignInBits)) {
-          assert(QueryMemSize != 32 && "4 byte load and store are legal");
-          return true;
-        }
-
-        return false;
-      })
+  // Before r6, halfword and doubleword accesses must be naturally aligned.
+  // Word accesses can use LWL/LWR and SWL/SWR at any alignment.
+  unsigned HalfwordAlign = ST.systemSupportsUnalignedAccess() ? 8 : 16;
+  unsigned DoublewordAlign = ST.systemSupportsUnalignedAccess() ? 8 : 64;
+  auto &MemActions = getActionDefinitionsBuilder({G_LOAD, G_STORE});
+  if (ST.hasMSA())
+    MemActions.legalForTypesWithMemDesc({{v16s8, p0, v16s8, 8},
+                                         {v8s16, p0, v8s16, 8},
+                                         {v4s32, p0, v4s32, 8},
+                                         {v2s64, p0, v2s64, 8}});
+  MemActions
+      .legalForTypesWithMemDesc({{s32, p0, s8, 8},
+                                 {s32, p0, s16, HalfwordAlign},
+                                 {s32, p0, s32, 8},
+                                 {p0, p0, s32, 8},
+                                 {s64, p0, s64, DoublewordAlign}})
+      // Split unaligned 64-bit accesses into legal 32-bit accesses. The
+      // SelectionDAG memory-access hook also accepts unaligned i64, so lower()
+      // cannot infer this split from the alignment alone.
+      .narrowScalarIf(
+          [=](const LegalityQuery &Query) {
+            return Query.Types[0] == s64 &&
+                   Query.MMODescrs[0].MemoryTy.getSizeInBits() == 64;
+          },
+          LegalizeMutations::changeTo(0, s32))
+      .maxScalarIf(
+          [](const LegalityQuery &Query) {
+            return Query.MMODescrs[0].MemoryTy.getSizeInBits() <= 32;
+          },
+          0, s32)
       .minScalar(0, s32)
+      // lowerStore masks the padding bits of non-byte-sized stores. Keep
+      // those masks on power-of-two register types.
+      .widenScalarToNextPow2(0)
+      .unsupportedIf(LegalityPredicates::atomicOrderingAtLeastOrStrongerThan(
+          0, AtomicOrdering::Unordered))
       .lower();
 
   getActionDefinitionsBuilder(G_IMPLICIT_DEF)
@@ -160,9 +103,12 @@ MipsLegalizerInfo::MipsLegalizerInfo(const MipsSubtarget &ST) {
      .legalFor({{s64, s32}});
 
   getActionDefinitionsBuilder({G_ZEXTLOAD, G_SEXTLOAD})
-      .legalForTypesWithMemDesc({{s32, p0, s8, 8},
-                                 {s32, p0, s16, 8}})
-      .clampScalar(0, s32, s32);
+      .legalForTypesWithMemDesc(
+          {{s32, p0, s8, 8}, {s32, p0, s16, HalfwordAlign}})
+      .clampScalar(0, s32, s32)
+      .unsupportedIf(LegalityPredicates::atomicOrderingAtLeastOrStrongerThan(
+          0, AtomicOrdering::Unordered))
+      .lower();
 
   getActionDefinitionsBuilder({G_ZEXT, G_SEXT, G_ANYEXT})
       .legalIf([](const LegalityQuery &Query) { return false; })
@@ -346,88 +292,6 @@ bool MipsLegalizerInfo::legalizeCustom(
   const LLT s64 = LLT::scalar(64);
 
   switch (MI.getOpcode()) {
-  case G_LOAD:
-  case G_STORE: {
-    unsigned MemSize = (**MI.memoperands_begin()).getSize().getValue();
-    Register Val = MI.getOperand(0).getReg();
-    unsigned Size = MRI.getType(Val).getSizeInBits();
-
-    MachineMemOperand *MMOBase = *MI.memoperands_begin();
-
-    assert(MemSize <= 8 && "MemSize is too large");
-    assert(Size <= 64 && "Scalar size is too large");
-
-    // Split MemSize into two, P2HalfMemSize is largest power of two smaller
-    // then MemSize. e.g. 8 = 4 + 4 , 6 = 4 + 2, 3 = 2 + 1.
-    unsigned P2HalfMemSize, RemMemSize;
-    if (isPowerOf2_64(MemSize)) {
-      P2HalfMemSize = RemMemSize = MemSize / 2;
-    } else {
-      P2HalfMemSize = 1 << Log2_32(MemSize);
-      RemMemSize = MemSize - P2HalfMemSize;
-    }
-
-    Register BaseAddr = MI.getOperand(1).getReg();
-    LLT PtrTy = MRI.getType(BaseAddr);
-    MachineFunction &MF = MIRBuilder.getMF();
-
-    auto P2HalfMemOp = MF.getMachineMemOperand(MMOBase, 0, P2HalfMemSize);
-    auto RemMemOp = MF.getMachineMemOperand(MMOBase, P2HalfMemSize, RemMemSize);
-
-    if (MI.getOpcode() == G_STORE) {
-      // Widen Val to s32 or s64 in order to create legal G_LSHR or G_UNMERGE.
-      if (Size < 32)
-        Val = MIRBuilder.buildAnyExt(s32, Val).getReg(0);
-      if (Size > 32 && Size < 64)
-        Val = MIRBuilder.buildAnyExt(s64, Val).getReg(0);
-
-      auto C_P2HalfMemSize = MIRBuilder.buildConstant(s32, P2HalfMemSize);
-      auto Addr = MIRBuilder.buildPtrAdd(PtrTy, BaseAddr, C_P2HalfMemSize);
-
-      if (MI.getOpcode() == G_STORE && MemSize <= 4) {
-        MIRBuilder.buildStore(Val, BaseAddr, *P2HalfMemOp);
-        auto C_P2Half_InBits = MIRBuilder.buildConstant(s32, P2HalfMemSize * 8);
-        auto Shift = MIRBuilder.buildLShr(s32, Val, C_P2Half_InBits);
-        MIRBuilder.buildStore(Shift, Addr, *RemMemOp);
-      } else {
-        auto Unmerge = MIRBuilder.buildUnmerge(s32, Val);
-        MIRBuilder.buildStore(Unmerge.getReg(0), BaseAddr, *P2HalfMemOp);
-        MIRBuilder.buildStore(Unmerge.getReg(1), Addr, *RemMemOp);
-      }
-    }
-
-    if (MI.getOpcode() == G_LOAD) {
-
-      if (MemSize <= 4) {
-        // This is anyextending load, use 4 byte lwr/lwl.
-        auto *Load4MMO = MF.getMachineMemOperand(MMOBase, 0, 4);
-
-        if (Size == 32)
-          MIRBuilder.buildLoad(Val, BaseAddr, *Load4MMO);
-        else {
-          auto Load = MIRBuilder.buildLoad(s32, BaseAddr, *Load4MMO);
-          MIRBuilder.buildTrunc(Val, Load.getReg(0));
-        }
-
-      } else {
-        auto C_P2HalfMemSize = MIRBuilder.buildConstant(s32, P2HalfMemSize);
-        auto Addr = MIRBuilder.buildPtrAdd(PtrTy, BaseAddr, C_P2HalfMemSize);
-
-        auto Load_P2Half = MIRBuilder.buildLoad(s32, BaseAddr, *P2HalfMemOp);
-        auto Load_Rem = MIRBuilder.buildLoad(s32, Addr, *RemMemOp);
-
-        if (Size == 64)
-          MIRBuilder.buildMergeLikeInstr(Val, {Load_P2Half, Load_Rem});
-        else {
-          auto Merge =
-              MIRBuilder.buildMergeLikeInstr(s64, {Load_P2Half, Load_Rem});
-          MIRBuilder.buildTrunc(Val, Merge);
-        }
-      }
-    }
-    MI.eraseFromParent();
-    break;
-  }
   case G_UITOFP: {
     Register Dst = MI.getOperand(0).getReg();
     Register Src = MI.getOperand(1).getReg();
