@@ -12,7 +12,7 @@ def MipsPostLegalizerCombiner: GICombiner<
   "MipsPostLegalizerCombinerImpl",
   [commute_int_constant_to_rhs,
    constant_fold_binop, constant_fold_unary_int_op,
-   right_identity_zero, right_identity_one_int, binop_same_val,
+   right_identity_zero, right_identity_one_int, binop_same_val, same_val_zero,
    binop_left_to_zero, binop_right_to_zero, add_sub_reg,
    select_same_val, select_constant_cmp,
    mul_to_shl, sub_to_add, shift_immed_chain,
