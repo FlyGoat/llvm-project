@@ -804,9 +804,11 @@ bool CombinerHelper::matchCombineExtendingLoads(
   if (LoadValueTy.getSizeInBits() < 8)
     return false;
 
-  // For non power-of-2 types, they will very likely be legalized into multiple
-  // loads. Don't bother trying to match them into extending loads.
-  if (!llvm::has_single_bit<uint32_t>(LoadValueTy.getSizeInBits()))
+  // Splitting a non-power-of-two load must preserve the extension. Require
+  // whole bytes and explicit target support even before legalization.
+  bool NeedsSplit =
+      !llvm::has_single_bit<uint32_t>(LoadValueTy.getSizeInBits());
+  if (NeedsSplit && (!LoadValueTy.isByteSized() || !LI))
     return false;
 
   // Find the preferred type aside from the any-extends (unless it's the only
@@ -828,13 +830,15 @@ bool CombinerHelper::matchCombineExtendingLoads(
       if (MMO.isAtomic())
         continue;
       // Check for legality.
-      if (!isPreLegalize()) {
+      if (!isPreLegalize() || NeedsSplit) {
         LegalityQuery::MemDesc MMDesc(MMO);
         unsigned CandidateLoadOpc = getExtLoadOpcForExtend(UseMI.getOpcode());
         LLT UseTy = MRI.getType(UseMI.getOperand(0).getReg());
         LLT SrcTy = MRI.getType(LoadMI->getPointerReg());
-        if (LI->getAction({CandidateLoadOpc, {UseTy, SrcTy}, {MMDesc}})
-                .Action != LegalizeActions::Legal)
+        auto Action =
+            LI->getAction({CandidateLoadOpc, {UseTy, SrcTy}, {MMDesc}}).Action;
+        if (Action != LegalizeActions::Legal &&
+            !(isPreLegalize() && Action == LegalizeActions::Lower))
           continue;
       }
       Preferred = ChoosePreferredUse(MI, Preferred,

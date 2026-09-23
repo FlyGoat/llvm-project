@@ -105,7 +105,12 @@ MipsLegalizerInfo::MipsLegalizerInfo(const MipsSubtarget &ST) {
   getActionDefinitionsBuilder({G_ZEXTLOAD, G_SEXTLOAD})
       .legalForTypesWithMemDesc(
           {{s32, p0, s8, 8}, {s32, p0, s16, HalfwordAlign}})
-      .clampScalar(0, s32, s32)
+      .maxScalarIf(
+          [](const LegalityQuery &Query) {
+            return Query.MMODescrs[0].MemoryTy.getSizeInBits() <= 32;
+          },
+          0, s32)
+      .minScalar(0, s32)
       .unsupportedIf(LegalityPredicates::atomicOrderingAtLeastOrStrongerThan(
           0, AtomicOrdering::Unordered))
       .lower();

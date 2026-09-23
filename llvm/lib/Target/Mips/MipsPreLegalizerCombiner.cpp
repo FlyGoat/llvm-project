@@ -61,20 +61,8 @@ public:
       return Helper.tryCombineMemCpyFamily(MI);
     case TargetOpcode::G_LOAD:
     case TargetOpcode::G_SEXTLOAD:
-    case TargetOpcode::G_ZEXTLOAD: {
-      // Don't attempt to combine non power of 2 loads or unaligned loads when
-      // subtarget doesn't support them.
-      auto MMO = *MI.memoperands_begin();
-      const MipsSubtarget &STI = MI.getMF()->getSubtarget<MipsSubtarget>();
-      if (!MMO->getSize().hasValue() ||
-          !isPowerOf2_64(MMO->getSize().getValue()))
-        return false;
-      bool isUnaligned = MMO->getAlign() < MMO->getSize().getValue();
-      if (!STI.systemSupportsUnalignedAccess() && isUnaligned)
-        return false;
-
+    case TargetOpcode::G_ZEXTLOAD:
       return Helper.tryCombineExtendingLoads(MI);
-    }
     }
 
     return false;

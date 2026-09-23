@@ -5,7 +5,6 @@
 ; RUN: llc -O2 -mtriple=mips-linux-gnu -mcpu=mips32r6 -global-isel -global-isel-abort=1 -verify-machineinstrs %s -o - | FileCheck %s --check-prefix=BE-R6
 
 ; Track code-quality improvements for generic memory splitting.
-; TODO: Combine the extension into the load before splitting to avoid a final mask.
 define i32 @load24(ptr %p) {
 ; LE-LABEL: load24:
 ; LE:       # %bb.0:
@@ -15,11 +14,8 @@ define i32 @load24(ptr %p) {
 ; LE-NEXT:    or $1, $2, $1
 ; LE-NEXT:    lbu $2, 2($4)
 ; LE-NEXT:    sll $2, $2, 16
-; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    lui $2, 255
-; LE-NEXT:    ori $2, $2, 65535
 ; LE-NEXT:    jr $ra
-; LE-NEXT:    and $2, $1, $2
+; LE-NEXT:    or $2, $2, $1
 ;
 ; BE-LABEL: load24:
 ; BE:       # %bb.0:
@@ -29,33 +25,24 @@ define i32 @load24(ptr %p) {
 ; BE-NEXT:    sll $3, $3, 8
 ; BE-NEXT:    or $2, $3, $2
 ; BE-NEXT:    sll $2, $2, 8
-; BE-NEXT:    or $1, $2, $1
-; BE-NEXT:    lui $2, 255
-; BE-NEXT:    ori $2, $2, 65535
 ; BE-NEXT:    jr $ra
-; BE-NEXT:    and $2, $1, $2
+; BE-NEXT:    or $2, $2, $1
 ;
 ; LE-R6-LABEL: load24:
 ; LE-R6:       # %bb.0:
 ; LE-R6-NEXT:    lhu $1, 0($4)
 ; LE-R6-NEXT:    lbu $2, 2($4)
 ; LE-R6-NEXT:    sll $2, $2, 16
-; LE-R6-NEXT:    or $1, $2, $1
-; LE-R6-NEXT:    lui $2, 255
-; LE-R6-NEXT:    ori $2, $2, 65535
 ; LE-R6-NEXT:    jr $ra
-; LE-R6-NEXT:    and $2, $1, $2
+; LE-R6-NEXT:    or $2, $2, $1
 ;
 ; BE-R6-LABEL: load24:
 ; BE-R6:       # %bb.0:
 ; BE-R6-NEXT:    lbu $1, 2($4)
 ; BE-R6-NEXT:    lhu $2, 0($4)
 ; BE-R6-NEXT:    sll $2, $2, 8
-; BE-R6-NEXT:    or $1, $2, $1
-; BE-R6-NEXT:    lui $2, 255
-; BE-R6-NEXT:    ori $2, $2, 65535
 ; BE-R6-NEXT:    jr $ra
-; BE-R6-NEXT:    and $2, $1, $2
+; BE-R6-NEXT:    or $2, $2, $1
   %v = load i24, ptr %p, align 1
   %r = zext i24 %v to i32
   ret i32 %r
@@ -68,54 +55,44 @@ define i64 @load40(ptr %p) {
 ; LE-NEXT:    lw $1, 0($4)
 ; LE-NEXT:    ori $2, $zero, 0
 ; LE-NEXT:    lbu $3, 4($4)
-; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    ori $3, $3, 0
-; LE-NEXT:    addiu $2, $zero, 65535
-; LE-NEXT:    and $2, $1, $2
+; LE-NEXT:    or $2, $2, $1
 ; LE-NEXT:    jr $ra
-; LE-NEXT:    andi $3, $3, 255
+; LE-NEXT:    ori $3, $3, 0
 ;
 ; BE-LABEL: load40:
 ; BE:       # %bb.0:
 ; BE-NEXT:    lbu $1, 4($4)
-; BE-NEXT:    lw $2, 0($4)
-; BE-NEXT:    sll $3, $2, 8
-; BE-NEXT:    sll $4, $1, 8
-; BE-NEXT:    srl $2, $2, 24
-; BE-NEXT:    or $2, $4, $2
-; BE-NEXT:    or $1, $3, $1
-; BE-NEXT:    ori $2, $2, 0
-; BE-NEXT:    addiu $3, $zero, 65535
-; BE-NEXT:    and $3, $1, $3
+; BE-NEXT:    ori $2, $zero, 0
+; BE-NEXT:    lw $3, 0($4)
+; BE-NEXT:    sll $4, $3, 8
+; BE-NEXT:    sll $2, $2, 8
+; BE-NEXT:    srl $3, $3, 24
+; BE-NEXT:    or $2, $2, $3
+; BE-NEXT:    or $3, $4, $1
 ; BE-NEXT:    jr $ra
-; BE-NEXT:    andi $2, $2, 255
+; BE-NEXT:    ori $2, $2, 0
 ;
 ; LE-R6-LABEL: load40:
 ; LE-R6:       # %bb.0:
 ; LE-R6-NEXT:    lw $1, 0($4)
 ; LE-R6-NEXT:    ori $2, $zero, 0
 ; LE-R6-NEXT:    lbu $3, 4($4)
-; LE-R6-NEXT:    or $1, $2, $1
-; LE-R6-NEXT:    ori $3, $3, 0
-; LE-R6-NEXT:    addiu $2, $zero, 65535
-; LE-R6-NEXT:    and $2, $1, $2
+; LE-R6-NEXT:    or $2, $2, $1
 ; LE-R6-NEXT:    jr $ra
-; LE-R6-NEXT:    andi $3, $3, 255
+; LE-R6-NEXT:    ori $3, $3, 0
 ;
 ; BE-R6-LABEL: load40:
 ; BE-R6:       # %bb.0:
 ; BE-R6-NEXT:    lbu $1, 4($4)
-; BE-R6-NEXT:    lw $2, 0($4)
-; BE-R6-NEXT:    sll $3, $2, 8
-; BE-R6-NEXT:    sll $4, $1, 8
-; BE-R6-NEXT:    srl $2, $2, 24
-; BE-R6-NEXT:    or $2, $4, $2
-; BE-R6-NEXT:    or $1, $3, $1
-; BE-R6-NEXT:    ori $2, $2, 0
-; BE-R6-NEXT:    addiu $3, $zero, 65535
-; BE-R6-NEXT:    and $3, $1, $3
+; BE-R6-NEXT:    ori $2, $zero, 0
+; BE-R6-NEXT:    lw $3, 0($4)
+; BE-R6-NEXT:    sll $4, $3, 8
+; BE-R6-NEXT:    sll $2, $2, 8
+; BE-R6-NEXT:    srl $3, $3, 24
+; BE-R6-NEXT:    or $2, $2, $3
+; BE-R6-NEXT:    or $3, $4, $1
 ; BE-R6-NEXT:    jr $ra
-; BE-R6-NEXT:    andi $2, $2, 255
+; BE-R6-NEXT:    ori $2, $2, 0
   %v = load i40, ptr %p, align 4
   %r = zext i40 %v to i64
   ret i64 %r
@@ -134,12 +111,9 @@ define i64 @load48(ptr %p) {
 ; LE-NEXT:    lbu $3, 1($3)
 ; LE-NEXT:    sll $3, $3, 8
 ; LE-NEXT:    or $3, $3, $4
-; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    ori $3, $3, 0
-; LE-NEXT:    addiu $2, $zero, 65535
-; LE-NEXT:    and $2, $1, $2
+; LE-NEXT:    or $2, $2, $1
 ; LE-NEXT:    jr $ra
-; LE-NEXT:    andi $3, $3, 65535
+; LE-NEXT:    ori $3, $3, 0
 ;
 ; BE-LABEL: load48:
 ; BE:       # %bb.0:
@@ -149,45 +123,38 @@ define i64 @load48(ptr %p) {
 ; BE-NEXT:    lbu $2, 4($4)
 ; BE-NEXT:    sll $2, $2, 8
 ; BE-NEXT:    or $1, $2, $1
-; BE-NEXT:    lwl $2, 0($4)
-; BE-NEXT:    lwr $2, 3($4)
-; BE-NEXT:    sll $3, $2, 16
-; BE-NEXT:    sll $4, $1, 16
-; BE-NEXT:    srl $2, $2, 16
-; BE-NEXT:    or $2, $4, $2
-; BE-NEXT:    or $1, $3, $1
-; BE-NEXT:    ori $2, $2, 0
-; BE-NEXT:    addiu $3, $zero, 65535
-; BE-NEXT:    and $3, $1, $3
+; BE-NEXT:    ori $2, $zero, 0
+; BE-NEXT:    lwl $3, 0($4)
+; BE-NEXT:    lwr $3, 3($4)
+; BE-NEXT:    sll $4, $3, 16
+; BE-NEXT:    sll $2, $2, 16
+; BE-NEXT:    srl $3, $3, 16
+; BE-NEXT:    or $2, $2, $3
+; BE-NEXT:    or $3, $4, $1
 ; BE-NEXT:    jr $ra
-; BE-NEXT:    andi $2, $2, 65535
+; BE-NEXT:    ori $2, $2, 0
 ;
 ; LE-R6-LABEL: load48:
 ; LE-R6:       # %bb.0:
 ; LE-R6-NEXT:    lw $1, 0($4)
 ; LE-R6-NEXT:    ori $2, $zero, 0
 ; LE-R6-NEXT:    lhu $3, 4($4)
-; LE-R6-NEXT:    or $1, $2, $1
-; LE-R6-NEXT:    ori $3, $3, 0
-; LE-R6-NEXT:    addiu $2, $zero, 65535
-; LE-R6-NEXT:    and $2, $1, $2
+; LE-R6-NEXT:    or $2, $2, $1
 ; LE-R6-NEXT:    jr $ra
-; LE-R6-NEXT:    andi $3, $3, 65535
+; LE-R6-NEXT:    ori $3, $3, 0
 ;
 ; BE-R6-LABEL: load48:
 ; BE-R6:       # %bb.0:
 ; BE-R6-NEXT:    lhu $1, 4($4)
-; BE-R6-NEXT:    lw $2, 0($4)
-; BE-R6-NEXT:    sll $3, $2, 16
-; BE-R6-NEXT:    sll $4, $1, 16
-; BE-R6-NEXT:    srl $2, $2, 16
-; BE-R6-NEXT:    or $2, $4, $2
-; BE-R6-NEXT:    or $1, $3, $1
-; BE-R6-NEXT:    ori $2, $2, 0
-; BE-R6-NEXT:    addiu $3, $zero, 65535
-; BE-R6-NEXT:    and $3, $1, $3
+; BE-R6-NEXT:    ori $2, $zero, 0
+; BE-R6-NEXT:    lw $3, 0($4)
+; BE-R6-NEXT:    sll $4, $3, 16
+; BE-R6-NEXT:    sll $2, $2, 16
+; BE-R6-NEXT:    srl $3, $3, 16
+; BE-R6-NEXT:    or $2, $2, $3
+; BE-R6-NEXT:    or $3, $4, $1
 ; BE-R6-NEXT:    jr $ra
-; BE-R6-NEXT:    andi $2, $2, 65535
+; BE-R6-NEXT:    ori $2, $2, 0
   %v = load i48, ptr %p, align 1
   %r = zext i48 %v to i64
   ret i64 %r
@@ -208,14 +175,9 @@ define i64 @load56(ptr %p) {
 ; LE-NEXT:    lbu $3, 2($3)
 ; LE-NEXT:    sll $3, $3, 16
 ; LE-NEXT:    or $3, $3, $4
-; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    ori $3, $3, 0
-; LE-NEXT:    addiu $2, $zero, 65535
-; LE-NEXT:    lui $4, 255
-; LE-NEXT:    ori $4, $4, 65535
-; LE-NEXT:    and $2, $1, $2
+; LE-NEXT:    or $2, $2, $1
 ; LE-NEXT:    jr $ra
-; LE-NEXT:    and $3, $3, $4
+; LE-NEXT:    ori $3, $3, 0
 ;
 ; BE-LABEL: load56:
 ; BE:       # %bb.0:
@@ -228,20 +190,16 @@ define i64 @load56(ptr %p) {
 ; BE-NEXT:    or $1, $3, $1
 ; BE-NEXT:    sll $1, $1, 8
 ; BE-NEXT:    or $1, $1, $2
-; BE-NEXT:    lwl $2, 0($4)
-; BE-NEXT:    lwr $2, 3($4)
-; BE-NEXT:    sll $3, $2, 24
-; BE-NEXT:    sll $4, $1, 24
-; BE-NEXT:    srl $2, $2, 8
-; BE-NEXT:    or $2, $4, $2
-; BE-NEXT:    or $1, $3, $1
-; BE-NEXT:    ori $2, $2, 0
-; BE-NEXT:    addiu $3, $zero, 65535
-; BE-NEXT:    lui $4, 255
-; BE-NEXT:    ori $4, $4, 65535
-; BE-NEXT:    and $3, $1, $3
+; BE-NEXT:    ori $2, $zero, 0
+; BE-NEXT:    lwl $3, 0($4)
+; BE-NEXT:    lwr $3, 3($4)
+; BE-NEXT:    sll $4, $3, 24
+; BE-NEXT:    sll $2, $2, 24
+; BE-NEXT:    srl $3, $3, 8
+; BE-NEXT:    or $2, $2, $3
+; BE-NEXT:    or $3, $4, $1
 ; BE-NEXT:    jr $ra
-; BE-NEXT:    and $2, $2, $4
+; BE-NEXT:    ori $2, $2, 0
 ;
 ; LE-R6-LABEL: load56:
 ; LE-R6:       # %bb.0:
@@ -253,14 +211,9 @@ define i64 @load56(ptr %p) {
 ; LE-R6-NEXT:    lbu $3, 2($3)
 ; LE-R6-NEXT:    sll $3, $3, 16
 ; LE-R6-NEXT:    or $3, $3, $4
-; LE-R6-NEXT:    or $1, $2, $1
-; LE-R6-NEXT:    ori $3, $3, 0
-; LE-R6-NEXT:    addiu $2, $zero, 65535
-; LE-R6-NEXT:    lui $4, 255
-; LE-R6-NEXT:    ori $4, $4, 65535
-; LE-R6-NEXT:    and $2, $1, $2
+; LE-R6-NEXT:    or $2, $2, $1
 ; LE-R6-NEXT:    jr $ra
-; LE-R6-NEXT:    and $3, $3, $4
+; LE-R6-NEXT:    ori $3, $3, 0
 ;
 ; BE-R6-LABEL: load56:
 ; BE-R6:       # %bb.0:
@@ -270,19 +223,15 @@ define i64 @load56(ptr %p) {
 ; BE-R6-NEXT:    lhu $2, 4($4)
 ; BE-R6-NEXT:    sll $2, $2, 8
 ; BE-R6-NEXT:    or $1, $2, $1
-; BE-R6-NEXT:    lw $2, 0($4)
-; BE-R6-NEXT:    sll $3, $2, 24
-; BE-R6-NEXT:    sll $4, $1, 24
-; BE-R6-NEXT:    srl $2, $2, 8
-; BE-R6-NEXT:    or $2, $4, $2
-; BE-R6-NEXT:    or $1, $3, $1
-; BE-R6-NEXT:    ori $2, $2, 0
-; BE-R6-NEXT:    addiu $3, $zero, 65535
-; BE-R6-NEXT:    lui $4, 255
-; BE-R6-NEXT:    ori $4, $4, 65535
-; BE-R6-NEXT:    and $3, $1, $3
+; BE-R6-NEXT:    ori $2, $zero, 0
+; BE-R6-NEXT:    lw $3, 0($4)
+; BE-R6-NEXT:    sll $4, $3, 24
+; BE-R6-NEXT:    sll $2, $2, 24
+; BE-R6-NEXT:    srl $3, $3, 8
+; BE-R6-NEXT:    or $2, $2, $3
+; BE-R6-NEXT:    or $3, $4, $1
 ; BE-R6-NEXT:    jr $ra
-; BE-R6-NEXT:    and $2, $2, $4
+; BE-R6-NEXT:    ori $2, $2, 0
   %v = load i56, ptr %p, align 1
   %r = zext i56 %v to i64
   ret i64 %r
@@ -507,45 +456,37 @@ define i32 @sextload24(ptr %p) {
 ; LE-NEXT:    lbu $2, 1($4)
 ; LE-NEXT:    sll $2, $2, 8
 ; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    lbu $2, 2($4)
+; LE-NEXT:    lb $2, 2($4)
 ; LE-NEXT:    sll $2, $2, 16
-; LE-NEXT:    or $1, $2, $1
-; LE-NEXT:    sll $1, $1, 8
 ; LE-NEXT:    jr $ra
-; LE-NEXT:    sra $2, $1, 8
+; LE-NEXT:    or $2, $2, $1
 ;
 ; BE-LABEL: sextload24:
 ; BE:       # %bb.0:
 ; BE-NEXT:    lbu $1, 2($4)
 ; BE-NEXT:    lbu $2, 1($4)
-; BE-NEXT:    lbu $3, 0($4)
+; BE-NEXT:    lb $3, 0($4)
 ; BE-NEXT:    sll $3, $3, 8
 ; BE-NEXT:    or $2, $3, $2
 ; BE-NEXT:    sll $2, $2, 8
-; BE-NEXT:    or $1, $2, $1
-; BE-NEXT:    sll $1, $1, 8
 ; BE-NEXT:    jr $ra
-; BE-NEXT:    sra $2, $1, 8
+; BE-NEXT:    or $2, $2, $1
 ;
 ; LE-R6-LABEL: sextload24:
 ; LE-R6:       # %bb.0:
 ; LE-R6-NEXT:    lhu $1, 0($4)
-; LE-R6-NEXT:    lbu $2, 2($4)
+; LE-R6-NEXT:    lb $2, 2($4)
 ; LE-R6-NEXT:    sll $2, $2, 16
-; LE-R6-NEXT:    or $1, $2, $1
-; LE-R6-NEXT:    sll $1, $1, 8
 ; LE-R6-NEXT:    jr $ra
-; LE-R6-NEXT:    sra $2, $1, 8
+; LE-R6-NEXT:    or $2, $2, $1
 ;
 ; BE-R6-LABEL: sextload24:
 ; BE-R6:       # %bb.0:
 ; BE-R6-NEXT:    lbu $1, 2($4)
-; BE-R6-NEXT:    lhu $2, 0($4)
+; BE-R6-NEXT:    lh $2, 0($4)
 ; BE-R6-NEXT:    sll $2, $2, 8
-; BE-R6-NEXT:    or $1, $2, $1
-; BE-R6-NEXT:    sll $1, $1, 8
 ; BE-R6-NEXT:    jr $ra
-; BE-R6-NEXT:    sra $2, $1, 8
+; BE-R6-NEXT:    or $2, $2, $1
   %v = load i24, ptr %p, align 1
   %r = sext i24 %v to i32
   ret i32 %r
