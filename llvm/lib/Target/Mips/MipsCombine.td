@@ -17,6 +17,7 @@ def MipsPostLegalizerCombiner: GICombiner<
    select_same_val, select_constant_cmp,
    mul_to_shl, sub_to_add, shift_immed_chain,
    icmp_to_true_false_known_bits, icmp_to_lhs_known_bits,
+   load_and_mask,
    overlapping_and, redundant_and, redundant_or, binop_left_undef_to_zero,
    ptr_add_immed_chain]> {
 }

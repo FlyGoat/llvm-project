@@ -1032,17 +1032,30 @@ bool CombinerHelper::matchCombineLoadWithAndMask(MachineInstr &MI,
   else if (LoadSizeBits > MaskSizeBits || LoadSizeBits == RegSize)
     return false;
 
+  // The low bits are at the end of the original access on big-endian targets.
+  uint64_t Offset = 0;
+  if (Builder.getMF().getDataLayout().isBigEndian())
+    Offset = MMO->getSize().getValue() - MemDesc.MemoryTy.getSizeInBytes();
+  MemDesc.AlignInBits = commonAlignment(MMO->getAlign(), Offset).value() * 8;
+  LLT PtrTy = MRI.getType(PtrReg);
+  LLT OffsetTy = LLT::scalar(PtrTy.getSizeInBits());
+  if (Offset && (!isLegalOrBeforeLegalizer(
+                     {TargetOpcode::G_PTR_ADD, {PtrTy, OffsetTy}}) ||
+                 !isConstantLegalOrBeforeLegalizer(OffsetTy)))
+    return false;
+
   // TODO: Could check if it's legal with the reduced or original memory size.
   if (!isLegalOrBeforeLegalizer(
-          {TargetOpcode::G_ZEXTLOAD, {RegTy, MRI.getType(PtrReg)}, {MemDesc}}))
+          {TargetOpcode::G_ZEXTLOAD, {RegTy, PtrTy}, {MemDesc}}))
     return false;
 
   MatchInfo = [=](MachineIRBuilder &B) {
     B.setInstrAndDebugLoc(*LoadMI);
     auto &MF = B.getMF();
-    auto PtrInfo = MMO->getPointerInfo();
-    auto *NewMMO = MF.getMachineMemOperand(MMO, PtrInfo, MemDesc.MemoryTy);
-    B.buildLoadInstr(TargetOpcode::G_ZEXTLOAD, Dst, PtrReg, *NewMMO);
+    Register NewPtr;
+    B.materializeObjectPtrOffset(NewPtr, PtrReg, OffsetTy, Offset);
+    auto *NewMMO = MF.getMachineMemOperand(MMO, Offset, MemDesc.MemoryTy);
+    B.buildLoadInstr(TargetOpcode::G_ZEXTLOAD, Dst, NewPtr, *NewMMO);
     replaceRegWith(MRI, LoadReg, Dst);
     LoadMI->eraseFromParent();
   };
